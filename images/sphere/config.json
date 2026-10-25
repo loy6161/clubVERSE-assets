@@ -1,14 +1,14 @@
 {
   "version": 1,
   "posters": {
-    "info1_5": true,
-    "info6_10": true,
-    "weekly": true,
+    "info1_5": false,
+    "info6_10": false,
+    "weekly": false,
     "today": true,
-    "members": true,
-    "cd": true,
-    "info11_15": true,
-    "info_wide": true
+    "members": false,
+    "cd": false,
+    "info11_15": false,
+    "info_wide": false
   },
   "sky": {
     "1": [
