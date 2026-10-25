@@ -1,0 +1,98 @@
+{
+  "version": 1,
+  "posters": {
+    "info1_5": true,
+    "info6_10": true,
+    "weekly": true,
+    "today": true,
+    "members": true,
+    "cd": true,
+    "info11_15": true,
+    "info_wide": true
+  },
+  "sky": {
+    "1": [
+      "https://loy6161.github.io/clubVERSE-assets/images/sphere/sky/heavens_L.jpg",
+      "https://loy6161.github.io/clubVERSE-assets/images/sphere/sky/heavens_R.jpg"
+    ],
+    "2": [
+      "https://loy6161.github.io/clubVERSE-assets/images/sphere/sky/planetarium_L.jpg",
+      "https://loy6161.github.io/clubVERSE-assets/images/sphere/sky/planetarium_R.jpg"
+    ],
+    "3": [
+      "https://loy6161.github.io/clubVERSE-assets/images/sphere/sky/space_L.jpg",
+      "https://loy6161.github.io/clubVERSE-assets/images/sphere/sky/space_R.jpg"
+    ],
+    "4": [
+      "https://loy6161.github.io/clubVERSE-assets/images/sphere/sky/shallow.jpg"
+    ],
+    "5": [
+      "https://loy6161.github.io/clubVERSE-assets/images/sphere/sky/deepsea.jpg"
+    ],
+    "6": [
+      "https://loy6161.github.io/clubVERSE-assets/images/sphere/sky/neon_L.jpg",
+      "https://loy6161.github.io/clubVERSE-assets/images/sphere/sky/neon_R.jpg"
+    ],
+    "7": [
+      "https://loy6161.github.io/clubVERSE-assets/images/sphere/sky/aurora.jpg"
+    ],
+    "8": [
+      "https://loy6161.github.io/clubVERSE-assets/images/sphere/sky/forest_L.jpg",
+      "https://loy6161.github.io/clubVERSE-assets/images/sphere/sky/forest_R.jpg"
+    ],
+    "9": [
+      "https://loy6161.github.io/clubVERSE-assets/images/sphere/sky/cherry_L.jpg",
+      "https://loy6161.github.io/clubVERSE-assets/images/sphere/sky/cherry_R.jpg"
+    ],
+    "10": [
+      "https://loy6161.github.io/clubVERSE-assets/images/sphere/sky/arena_L.jpg",
+      "https://loy6161.github.io/clubVERSE-assets/images/sphere/sky/arena_R.jpg"
+    ],
+    "12": [
+      "https://loy6161.github.io/clubVERSE-assets/images/sphere/sky/ruins_L.jpg",
+      "https://loy6161.github.io/clubVERSE-assets/images/sphere/sky/ruins_R.jpg"
+    ],
+    "13": [
+      "https://loy6161.github.io/clubVERSE-assets/images/sphere/sky/seaside_L.jpg",
+      "https://loy6161.github.io/clubVERSE-assets/images/sphere/sky/seaside_R.jpg"
+    ],
+    "14": [
+      "https://loy6161.github.io/clubVERSE-assets/images/sphere/sky/desert_L.jpg",
+      "https://loy6161.github.io/clubVERSE-assets/images/sphere/sky/desert_R.jpg"
+    ],
+    "15": [
+      "https://loy6161.github.io/clubVERSE-assets/images/sphere/sky/starry_L.jpg",
+      "https://loy6161.github.io/clubVERSE-assets/images/sphere/sky/starry_R.jpg"
+    ],
+    "16": [
+      "https://loy6161.github.io/clubVERSE-assets/images/sphere/sky/medieval_L.jpg",
+      "https://loy6161.github.io/clubVERSE-assets/images/sphere/sky/medieval_R.jpg"
+    ],
+    "17": [
+      "https://loy6161.github.io/clubVERSE-assets/images/sphere/sky/kowloon_L.jpg",
+      "https://loy6161.github.io/clubVERSE-assets/images/sphere/sky/kowloon_R.jpg"
+    ],
+    "18": [
+      "https://loy6161.github.io/clubVERSE-assets/images/sphere/sky/seaside_L.jpg",
+      "https://loy6161.github.io/clubVERSE-assets/images/sphere/sky/seaside_R.jpg"
+    ],
+    "19": [
+      "https://loy6161.github.io/clubVERSE-assets/images/sphere/sky/moonlit.jpg"
+    ],
+    "20": [
+      "https://loy6161.github.io/clubVERSE-assets/images/sphere/sky/seabed.jpg"
+    ],
+    "21": [
+      "https://loy6161.github.io/clubVERSE-assets/images/sphere/sky/stadium.jpg"
+    ],
+    "22": [
+      "https://loy6161.github.io/clubVERSE-assets/images/sphere/sky/snowcity.jpg"
+    ]
+  },
+  "sets": [
+    {
+      "name": "例（書き換えて使う）",
+      "presets": []
+    }
+  ]
+}
