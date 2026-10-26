@@ -948,7 +948,7 @@ async function doSave() {
 }
 /* ---------- JSON 表示・全体描画 ---------- */
 function json() { try { $('json').textContent = configText(); } catch (e) { $('json').textContent = String(e); } }
-const tabs = ['sets', 'memory', 'posters', 'settings'];
+const tabs = ['sets', 'memory', 'posters', 'ander', 'settings'];
 function show(t) {
   if (!tabs.includes(t)) t = 'sets';
   document.querySelectorAll('.tab').forEach(e => e.classList.toggle('on', e.id === 'tab-' + t));

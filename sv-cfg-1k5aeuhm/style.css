@@ -11,7 +11,7 @@ button.pri{background:var(--acc);border-color:var(--acc);color:#fff}
 button.pri:hover{background:#4a4ac0}
 button.sm{padding:2px 8px;font-size:13px}
 button.danger{color:var(--bad)}
-nav{display:flex;gap:4px;padding:8px 12px 0;background:#e3e5ee;overflow-x:auto;border-bottom:1px solid var(--line)}
+nav{display:flex;gap:4px;align-items:flex-end;padding:8px 12px 0;background:#e3e5ee;overflow-x:auto;border-bottom:1px solid var(--line)}
 nav button{border:0;border-radius:8px 8px 0 0;background:transparent;padding:10px 16px;white-space:nowrap;color:#445}
 nav button.on{background:var(--bg);color:var(--acc);font-weight:700}
 main{max-width:1240px;margin:0 auto;padding:16px}
@@ -160,3 +160,9 @@ input[type=file]{display:none}
 .mem.bad{box-shadow:0 0 0 2px var(--bad);background:#fdecea}
 .slot small.nopre{display:block;font-size:10px;color:var(--warn)}
 body.testmode .modal{padding-top:46px}
+
+/* 会場ごとのタブのまとまり */
+nav .grp{display:flex;flex-direction:column;flex:none}
+nav .gname{font-size:11px;font-weight:700;letter-spacing:.06em;color:#667;padding:0 10px 2px;border-bottom:2px solid #c5c9d8;margin:0 4px 0 0}
+nav .gtabs{display:flex;gap:4px;margin-right:12px}
+nav .grp:last-child .gname{border-bottom-color:transparent}
