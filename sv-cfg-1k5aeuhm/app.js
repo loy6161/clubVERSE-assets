@@ -1,5 +1,5 @@
 'use strict';
-/* Sphere 設定エディタ（画面の案 v3 に沿った実装・修正1）
+/* VERSE CITY 設定エディタ（画面の案 v3 に沿った実装・修正1）
    読み書き: GitHub API（キーはこのブラウザの localStorage にだけ保存）。
    試験モード: URL に ?test=1 を付けたときだけ。通信先を同じオリジンの /__fakegh（手元のダミー）にする。api.github.com には何も送らない。 */
 
@@ -842,6 +842,8 @@ function renderSettings() {
 }
 function saveSettingsUi() {
   S.token = $('setToken').value.trim(); S.repo = $('setRepo').value.trim() || 'loy6161/clubVERSE'; S.branch = $('setBranch').value.trim() || 'main'; persistSettings(); renderSettings(); toast(S.test ? '試験モードなので、設定は保存していません' : '設定を保存しました（このブラウザの中だけ）');
+  // 読み取り専用で開いていたら、キーを入れた時点で GitHub から読み直す
+  if (!S.test && S.token && st.readOnly) reloadAll();
 }
 function clearToken() { S.token = ''; $('setToken').value = ''; persistSettings(); renderSettings(); toast('キーをこのブラウザから消しました'); }
 async function testConn() {
