@@ -81,16 +81,43 @@ const FITN = { cover: '中央で切り取る', contain: '全体を収める（�
 const st = {
   baseCfg: null, baseText: '', cfgSha: null, source: '', readOnly: false, rev: 1,
   posters: {}, basePosters: {}, mems: [], baseMems: [], sets: [], baseSets: [], nextId: 1,
-  pending: new Map(), skyUrls: {}, topBad: []
+  pending: new Map(), skyUrls: {}, topBad: [], shas: null, local: {}, tv: String(Date.now())
 };
 let selMem = null, selSlot = [0, 0], selCase = 'info1_5', selImg = null, selBoard = null, selFloor = 1;
-let up = null, bulk = null;
+let up = null, bulk = null, same = null;
 
 const memOf = id => st.mems.find(x => x.id === id);
 const memByName = n => st.mems.find(x => x.name === n);
 
 /* ---------- アセット URL ---------- */
-function assetUrl(path) { return (S.test ? 'mock-repo/' : PAGES_BASE) + path + '?v=' + st.rev; }
+// サムネの URL には「中身ごとに変わる印」を付ける（同じ URL のままだとブラウザ／CDN のキャッシュで古い絵が出るため）。
+// 印 = Git の木から取った blob sha の先頭 8 桁。取れなかった（キーが無い等）ときは、読み込みごとの時刻。
+// 保存した直後は、保存した画像（手元のデータ）をそのまま出す。
+function assetUrl(path) {
+  if (st.local[path]) return st.local[path];
+  const v = st.shas && st.shas[path] ? st.shas[path].slice(0, 8) : st.tv;
+  return (S.test ? 'mock-repo/' : PAGES_BASE) + path + '?v=' + v;
+}
+async function loadShas() {
+  st.shas = null; st.tv = String(Date.now());
+  Object.values(st.local).forEach(u => URL.revokeObjectURL(u)); st.local = {};
+  if (!canApi()) return;
+  try {
+    const ref = await gh('GET', `/repos/${S.repo}/git/ref/heads/${branchPath()}`);
+    const c = await gh('GET', `/repos/${S.repo}/git/commits/${ref.object.sha}`);
+    const t = await gh('GET', `/repos/${S.repo}/git/trees/${c.tree.sha}?recursive=1`);
+    if (t.truncated || !Array.isArray(t.tree)) return;
+    const m = {}; t.tree.forEach(e => { if (e.type === 'blob' && e.path.startsWith('images/')) m[e.path] = e.sha; });
+    st.shas = m;
+  } catch (e) { st.shas = null; }
+}
+const blobShaCache = new WeakMap();
+async function gitBlobSha(bytes) {
+  if (blobShaCache.has(bytes)) return blobShaCache.get(bytes);
+  const head = new TextEncoder().encode('blob ' + bytes.length + ' '); const all = new Uint8Array(head.length + bytes.length); all.set(head); all.set(bytes, head.length);
+  const h = await crypto.subtle.digest('SHA-1', all); const hex = [...new Uint8Array(h)].map(b => b.toString(16).padStart(2, '0')).join('');
+  blobShaCache.set(bytes, hex); return hex;
+}
 function skyThumb(mode) {
   const a = st.skyUrls[mode]; if (!a || typeof a[0] !== 'string') return null;
   const u = a[0].startsWith(PAGES_BASE) ? a[0].slice(PAGES_BASE.length) : null;
@@ -175,6 +202,7 @@ async function loadAll() {
   let cfg;
   try { cfg = JSON.parse(text); } catch (e) { $('topMsg').innerHTML = `<div class="banner err">config.json が JSON として読めません: ${esc(e.message)}</div>`; return false; }
   st.cfgSha = sha;
+  await loadShas();
   initFromConfig(cfg, text);
   if (src === null) {
     st.source = '';
@@ -359,7 +387,10 @@ function computeChanges() {
   }
   const bp = st.baseCfg && st.baseCfg.posters;
   if (isObj(bp) && 'info_wide' in bp && !!st.posters.info_wide1_3 !== !!st.basePosters.info_wide1_3) ch.push({ t: 'poster', h: `旧キー <b>info_wide</b>（古いワールド用）: ${bp.info_wide} → <b>${!!st.posters.info_wide1_3}</b>（INFO WIDE 1-3 に合わせます）` });
-  st.pending.forEach((v, path) => ch.push({ t: 'img', h: `画像を差し替え: <b>${esc(path)}</b>（${v.beforeSize ? fmtB(v.beforeSize) + ' → ' : ''}${fmtB(v.bytes.length)}）<br><small>方式: ${esc(v.methodLabel)} ・ はみ出し: ${esc(v.fitText)}</small>` }));
+  pendGroups().forEach(g => { const v = g.d, path = g.paths[0];
+    if (v.unchanged) { ch.push({ t: 'imgsame', cls: 'noop', h: `<b>${g.paths.length > 1 ? '同じ画像 × ' + g.paths.length + ' 枠（' + esc(groupNames(g.paths)) + '）' : esc(path)}</b>: 今のファイルと同じ画像なので、保存しません` }); return; }
+    if (g.paths.length > 1) ch.push({ t: 'img', h: `画像を差し替え: <b>同じ画像 × ${g.paths.length} 枠（${esc(groupNames(g.paths))}）</b>（${fmtB(v.bytes.length)}）<br><small>${esc(g.paths.join(' ／ '))}<br>方式: ${esc(v.methodLabel)} ・ はみ出し: ${esc(v.fitText)}</small>` });
+    else ch.push({ t: 'img', h: `画像を差し替え: <b>${esc(path)}</b>（${v.beforeSize ? fmtB(v.beforeSize) + ' → ' : ''}${fmtB(v.bytes.length)}）<br><small>方式: ${esc(v.methodLabel)} ・ はみ出し: ${esc(v.fitText)}</small>` }); });
   if (!ch.length && configText() !== st.baseText) ch.push({ t: 'other', h: 'config.json の中身が変わります（下の差分を見てください）' });
   return ch;
 }
@@ -580,11 +611,11 @@ function renderPosters() {
     return `<div class="pimg ${selImg === i ? 'sel' : ''} ${pd ? 'pend' : ''}" onclick="selImgF(${i})"><div class="im" style='background-image:url("${pd ? pd.url : assetUrl('images/' + f)}")'></div><div class="ft"><span>${i + 1}枚目${pd ? ' <i class="pendtag">差し替え予定</i>' : ''}</span><span>${f.split('/').pop()}</span></div></div>`
   }).join('')}</div>
  ${selImg !== null ? `<p class="help" style="margin-top:8px">${selImg + 1} 枚目は、${((IMGPOS[c.k] || {})[selImg] || []).map(p => p.n).filter((v, i, a) => a.indexOf(v) === i).length} 面（番号 ${((IMGPOS[c.k] || {})[selImg] || []).map(p => p.n).filter((v, i, a) => a.indexOf(v) === i).join('・')}）に出ます。</p>` : ''}
- <div class="acts"><button onclick="openBulk()">まとめて ${c.f.length} 枚選ぶ</button></div>`;
-  keyTbl(); renderBulk(); renderUpload(); updateDirty();
+ <div class="acts"><button onclick="openBulk()">まとめて ${c.f.length} 枚選ぶ</button>${c.f.length > 1 ? '<button onclick="openSame()">同じ画像をまとめて入れる</button>' : ''}</div>`;
+  keyTbl(); renderBulk(); renderSame(); renderUpload(); updateDirty();
 }
-function selCaseF(k) { selCase = k; selImg = null; selBoard = null; up = null; bulk = null; selFloor = (boardsOf(k)[0] || { floor: 1 }).floor; renderPosters(); }
-function selImgF(i) { selImg = selImg === i ? null : i; up = null; renderPosters(); }
+function selCaseF(k) { cancelSame(false); selCase = k; selImg = null; selBoard = null; up = null; bulk = null; selFloor = (boardsOf(k)[0] || { floor: 1 }).floor; renderPosters(); }
+function selImgF(i) { cancelSame(false); selImg = selImg === i ? null : i; up = null; renderPosters(); }
 function keyTbl() {
   $('keyTbl').innerHTML = '<tr><th>ボタン名</th><th>config.json のキー</th><th>絵</th><th>エリア（面の数）</th></tr>' + CASES.map(c => `<tr><td>${c.n}</td><td><code>${c.k}</code></td><td>${c.f.length} 枚</td><td>${areasOf(c.k).map(a => a + '（' + boardsOf(c.k).filter(b => b.area === a).length + '）').join('・')}　計 ${boardsOf(c.k).length} 面</td></tr>`).join('') + '<tr><td>（旧）INFO WIDE 全部</td><td><code>info_wide</code></td><td>9 枚</td><td>古いワールド用。元の config.json にあるときだけ、INFO WIDE 1-3 を変えたとき同じ値にします</td></tr>';
 }
@@ -698,7 +729,7 @@ async function runUp() {
   if (tok === upTok && up) { up.busy = false; renderUpload(); }
 }
 function pickOne(file) {
-  if (!file) return; if (selImg === null) return;
+  if (!file) return; if (selImg === null) return; cancelSame(false);
   const c = caseOf(selCase);
   up = { file, srcUrl: URL.createObjectURL(file), fit: 'cover', level: levelOf(c.k), dither: dithOf(c.k), res: null, resUrl: null, busy: true, err: null };
   const im = new Image(); im.onload = () => { if (up) { up.srcW = im.naturalWidth; up.srcH = im.naturalHeight; renderUpload(); } }; im.src = up.srcUrl;
@@ -709,9 +740,10 @@ function dragLeave(e) { e.currentTarget.classList.remove('over'); }
 function dropOne(e) { e.preventDefault(); e.currentTarget.classList.remove('over'); const f = [...e.dataTransfer.files].find(x => x.type.startsWith('image/')); if (f) pickOne(f); }
 function chooseOne() { const i = $('fileOne'); i.value = ''; i.onchange = () => pickOne(i.files[0]); i.click(); }
 function upSet(k, v) { up[k] = v; runUp(); }
-function addPending(path, res, srcFile, meta, fit) {
+async function addPending(path, res, srcFile, meta, fit, grp) {
+  const newSha = await gitBlobSha(res.bytes);
   const old = st.pending.get(path); if (old && old.url) URL.revokeObjectURL(old.url);
-  st.pending.set(path, { bytes: res.bytes, url: blobUrl(res.bytes), w: res.w, h: res.h, srcName: srcFile ? srcFile.name : '', srcSize: srcFile ? srcFile.size : 0, beforeSize: meta.size, beforeSha: meta.sha, method: res.method, methodLabel: res.methodLabel, fit, fitText: fitText(fit, res.srcW, res.srcH, res.w, res.h) });
+  st.pending.set(path, { bytes: res.bytes, url: blobUrl(res.bytes), w: res.w, h: res.h, srcName: srcFile ? srcFile.name : '', srcSize: srcFile ? srcFile.size : 0, beforeSize: meta.size, beforeSha: meta.sha, method: res.method, methodLabel: res.methodLabel, fit, fitText: fitText(fit, res.srcW, res.srcH, res.w, res.h), grp: grp || null, newSha, unchanged: !!meta.sha && meta.sha === newSha });
 }
 async function curSize(path) {
   try { const r = await fetch(assetUrl(path), { cache: 'no-store' }); if (!r.ok) return 0; return (await r.blob()).size; } catch (e) { return 0; }
@@ -728,7 +760,7 @@ async function commitUp() {
   if (!up || !up.res) return;
   const c = caseOf(selCase), f = c.f[selImg]; const path = 'images/' + f;
   const meta = await curMeta(path);
-  addPending(path, up.res, up.file, meta, up.fit);
+  await addPending(path, up.res, up.file, meta, up.fit);
   toast(`${f.split('/').pop()} を保存待ちに入れました`); cancelUp(false); renderPosters();
 }
 function cancelUp(render = true) { if (up) { upTok++; up.srcUrl && URL.revokeObjectURL(up.srcUrl); up.resUrl && URL.revokeObjectURL(up.resUrl); } up = null; if (render) renderUpload(); }
@@ -771,7 +803,7 @@ function openBulk() { const i = $('fileMany'); i.value = ''; i.onchange = () => 
 function bulkDrop(e) { e.preventDefault(); e.currentTarget.classList.remove('over'); pickMany([...e.dataTransfer.files]); }
 async function pickMany(files) {
   files = files.filter(f => f.type.startsWith('image/')); if (!files.length) return;
-  const c = caseOf(selCase); selImg = null; up = null;
+  const c = caseOf(selCase); selImg = null; up = null; cancelSame(false);
   const slotKey = f => f.split('/').pop().replace(/\.png$/i, '').toLowerCase();
   const items = files.map(file => ({ file, slot: -1, srcUrl: URL.createObjectURL(file), res: null, resUrl: null, status: '待ち' }));
   const used = new Set();
@@ -807,7 +839,7 @@ async function bulkCommit() {
   if (!bulk || bulk.busy) return; const c = caseOf(bulk.caseKey); let n = 0;
   for (const it of bulk.items) {
     if (it.slot < 0 || !it.res) continue; const path = 'images/' + c.f[it.slot];
-    addPending(path, it.res, it.file, await curMeta(path), bulk.fit); n++;
+    await addPending(path, it.res, it.file, await curMeta(path), bulk.fit); n++;
   }
   toast(`${n} 枚を保存待ちに入れました`); cancelBulk(false); renderPosters();
 }
@@ -825,6 +857,89 @@ function renderBulk() {
    <td><select onchange="bulkSlot(${i},this.value)"><option value="-1" ${it.slot < 0 ? 'selected' : ''}>入れない</option>${c.f.map((f, j) => `<option value="${j}" ${it.slot === j ? 'selected' : ''}>${j + 1}枚目 ${f.split('/').pop()}</option>`).join('')}</select></td>
    <td>${fmtB(it.file.size)}</td><td>${it.res ? it.res.w + '×' + it.res.h + ' ・ ' + fmtB(it.res.bytes.length) + '<br><small>' + esc(it.res.methodLabel) + (it.res.bytes.length > it.file.size && it.res.method !== 'orig' ? ' ・ 選んだ画像より大きい' : '') + '</small>' : '—'}</td><td>${esc(it.status)}</td></tr>`).join('')}</table></div>
   <div class="acts"><button class="pri" onclick="bulkCommit()" ${(!bulk.busy && ok > 0 && ok === tgt) ? '' : 'disabled'}>${ok} 枚を保存待ちに入れる</button><button onclick="cancelBulk()">やめる</button></div></div>`;
+}
+
+/* ---------- 同じ画像をまとめて入れる ---------- */
+const baseNm = f => f.split('/').pop().replace(/\.png$/i, '');
+// 枠の名前をまとめて書く: INFO_WIDE04・05・06
+function groupNames(paths) {
+  const n = paths.map(p => baseNm(p.replace(/^images\//, '')));
+  const m = n.map(x => x.match(/^(.*?)(\d+)$/));
+  if (n.length > 1 && m.every(x => x && x[1] === m[0][1])) return m[0][1] + m[0][2] + m.slice(1).map(x => '・' + x[2]).join('');
+  return n.join('・');
+}
+// 保存待ちを「同じ画像」の組ごとにまとめる（組でない物は 1 件ずつ）
+function pendGroups() {
+  const gs = [], by = new Map();
+  st.pending.forEach((d, path) => {
+    if (d.grp) { const key = d.grp + '|' + d.w + 'x' + d.h + '|' + !!d.unchanged; let g = by.get(key); if (!g) { g = { paths: [], d }; by.set(key, g); gs.push(g); } g.paths.push(path); }
+    else gs.push({ paths: [path], d });
+  });
+  return gs;
+}
+function openSame() { const i = $('fileOne'); i.value = ''; i.onchange = () => pickSame(i.files[0]); i.click(); }
+function sameDrop(e) { e.preventDefault(); e.currentTarget.classList.remove('over'); const f = [...e.dataTransfer.files].find(x => x.type.startsWith('image/')); if (f) pickSame(f); }
+function pickSame(file) {
+  if (!file) return; const c = caseOf(selCase);
+  const keep = same && same.caseKey === c.k ? same.on.slice() : null;
+  cancelSame(false); selImg = null; up = null; cancelBulk(false);
+  same = { file, caseKey: c.k, srcUrl: URL.createObjectURL(file), on: keep || c.f.map(() => true), fit: 'cover', level: levelOf(c.k), dither: dithOf(c.k), cache: {}, busy: true, err: null, tok: ++upTok };
+  const S0 = same; const im = new Image(); im.onload = () => { if (same === S0) { S0.srcW = im.naturalWidth; S0.srcH = im.naturalHeight; renderSame(); } }; im.src = S0.srcUrl;
+  renderPosters(); runSame();
+}
+const sameKey = (w, h) => w + 'x' + h;
+async function runSame() {
+  if (!same) return; const A = same; const tok = A.tok = ++upTok; A.busy = true; A.err = null;
+  const c = caseOf(A.caseKey);
+  const sizes = []; c.f.forEach((f, i) => { if (A.on[i]) { const [w, h] = sizeOfFile(c, f); const k = sameKey(w, h); if (!sizes.some(x => x.k === k)) sizes.push({ k, w, h }); } });
+  renderSame();
+  for (const z of sizes) {
+    if (A.cache[z.k]) continue;
+    try {
+      const r = await convertImage(A.file, z.w, z.h, A.fit, A.level, A.dither);
+      if (tok !== A.tok || same !== A) return;
+      r.url = blobUrl(r.bytes); A.cache[z.k] = r;
+    } catch (e) { if (tok === A.tok && same === A) { A.err = e.message; } }
+    if (tok !== A.tok || same !== A) return;
+    renderSame();
+  }
+  if (same === A && tok === A.tok) { A.busy = false; renderSame(); }
+}
+function sameClearCache(A) { Object.values(A.cache).forEach(r => r.url && URL.revokeObjectURL(r.url)); A.cache = {}; }
+function sameSet(k, v) { sameClearCache(same); same[k] = v; runSame(); }
+function sameTog(i, v) { same.on[i] = !!v; runSame(); }
+function sameAll(v) { same.on = same.on.map(() => !!v); runSame(); }
+async function sameCommit() {
+  if (!same || same.busy) return; const A = same, c = caseOf(A.caseKey); const grp = 'g' + (++upTok); let n = 0;
+  for (let i = 0; i < c.f.length; i++) {
+    if (!A.on[i]) continue; const [w, h] = sizeOfFile(c, c.f[i]); const r = A.cache[sameKey(w, h)]; if (!r) return;
+    const path = 'images/' + c.f[i];
+    await addPending(path, r, A.file, await curMeta(path), A.fit, grp); n++;
+  }
+  toast(`同じ画像を ${n} 枠、保存待ちに入れました`); cancelSame(false); renderPosters();
+}
+function cancelSame(render = true) { if (same) { same.tok = ++upTok; URL.revokeObjectURL(same.srcUrl); sameClearCache(same); } same = null; if (render) renderSame(); }
+function renderSame() {
+  const box = $('sameBox'); if (!box) return; if (!same) { box.innerHTML = ''; return; }
+  const c = caseOf(same.caseKey), A = same;
+  const sel = c.f.map((f, i) => i).filter(i => A.on[i]);
+  const sizes = {}; sel.forEach(i => { const [w, h] = sizeOfFile(c, c.f[i]); (sizes[sameKey(w, h)] = sizes[sameKey(w, h)] || { w, h, n: 0 }).n++; });
+  const ready = sel.length > 0 && Object.keys(sizes).every(k => A.cache[k]);
+  const fsz = Object.keys(sizes).map(k => A.cache[k] ? `${sizes[k].w}×${sizes[k].h}（${sizes[k].n} 枠）: ${fmtB(A.cache[k].bytes.length)} ・ ${esc(A.cache[k].methodLabel)}` : `${sizes[k].w}×${sizes[k].h}（${sizes[k].n} 枠）: 変換中…`);
+  const r0 = Object.keys(sizes).map(k => A.cache[k]).find(Boolean);
+  const asp = A.srcW && sel.length ? (() => { const [w, h] = sizeOfFile(c, c.f[sel[0]]); return { d: aspectDiff(A.srcW, A.srcH, w, h), w, h }; })() : null;
+  box.innerHTML = `<div class="up"><b>${c.n} に同じ画像をまとめて入れる</b> <span class="help">1 枚の画像を、チェックした枠すべてに入れます。変換は 1 回だけ（枠の大きさが違うときは大きさごとに 1 回）</span>
+  <div class="drop" style="margin-top:10px" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="sameDrop(event)">ほかの画像に変えるには、ここに置くか <button class="sm" onclick="openSame()">ファイルを選ぶ</button>　<span class="help">選んだ画像: ${esc(A.file.name)}（${A.srcW ? A.srcW + '×' + A.srcH : '?'} ・ ${fmtB(A.file.size)}）</span></div>
+  <div style="margin-top:10px"><span class="help">入れる枠:</span> <button class="sm" onclick="sameAll(true)">全部</button> <button class="sm" onclick="sameAll(false)">全部外す</button>
+   <div class="slots">${c.f.map((f, i) => `<label class="slot ${A.on[i] ? 'on' : ''}"><input type="checkbox" ${A.on[i] ? 'checked' : ''} onchange="sameTog(${i},this.checked)"> ${i + 1}枚目 ${esc(baseNm(f))}</label>`).join('')}</div></div>
+  <div class="inl" style="margin-top:10px"><span class="help">はみ出し:</span><select onchange="sameSet('fit',this.value)">${Object.keys(FITN).map(k => `<option value="${k}" ${A.fit === k ? 'selected' : ''}>${FITN[k]}</option>`).join('')}</select>
+   <span class="help">減色:</span><select onchange="sameSet('level',this.value)">${Object.keys(LEVELS).map(k => `<option value="${k}" ${A.level === k ? 'selected' : ''}>${LEVELS[k].n}</option>`).join('')}</select>${ditherBox(A.dither, "sameSet.bind(null,'dither')")}${A.busy ? '<span class="help">変換中…</span>' : ''}</div>
+  ${asp && asp.d > 0.02 ? `<div class="note">縦横の比が枠のファイル（${asp.w}×${asp.h}）と違います（${A.srcW}×${A.srcH}）。上の「はみ出し」で扱いを選べます。</div>` : ''}
+  ${A.err ? `<div class="banner err">変換できませんでした: ${esc(A.err)}</div>` : ''}
+  <div class="cmp"><div class="p"><h4>変換前（選んだ画像）</h4><div class="im" style="background-image:${esc(cssUrl(A.srcUrl))}"></div></div>
+   <div class="p"><h4>変換後（全部の枠に入れる画像）</h4><div class="im" style="${r0 ? 'background-image:' + esc(cssUrl(r0.url)) : ''}"></div></div></div>
+  <p class="help" style="margin-top:8px">${sel.length ? fsz.join('<br>') : '枠が 1 つも選ばれていません'}</p>
+  <div class="acts"><button class="pri" onclick="sameCommit()" ${ready && !A.busy ? '' : 'disabled'}>同じ画像を ${sel.length} 枠、保存待ちに入れる</button><button onclick="cancelSame()">やめる</button></div></div>`;
 }
 
 /* ---------- 設定タブ ---------- */
@@ -875,17 +990,19 @@ function lineDiff(a, b) {
 let saving = false, lastResult = null;
 function openConfirm() {
   const ch = computeChanges(), v = validate(); const txt = configText();
-  const defMsg = 'Sphere 設定: ' + [ch.some(c => c.t !== 'img') ? 'config.json' : '', st.pending.size ? `ポスター画像 ${st.pending.size} 枚` : ''].filter(Boolean).join(' / ');
-  const noChange = !ch.length;
+  const nImg = [...st.pending.values()].filter(d => !d.unchanged).length;
+  const defMsg = 'VERSE CITY 設定: ' + [ch.some(c => c.t !== 'img' && c.t !== 'imgsame') ? 'config.json' : '', nImg ? `ポスター画像 ${nImg} 枚` : ''].filter(Boolean).join(' / ');
+  const noChange = !ch.some(c => c.t !== 'imgsame');
   const canSave = !st.readOnly && !noChange && !v.errors.length;
   $('modalBox').innerHTML = `<h3>保存の確認${S.test ? ' <span class="mock">試験モード</span>' : ''}</h3>
   ${S.test ? '<div class="banner warn">試験モードです。本物の GitHub には何も送りません（手元のダミーに書くだけです）。</div>' : `<p class="help" style="margin:0 0 6px">${esc(S.repo)} の ${esc(S.branch)} に、1 回のコミットで書き込みます。</p>`}
   ${st.readOnly ? '<div class="banner err">キーが未設定か、GitHub から読めなかったので、保存できません。「設定（キー）」で確かめてください。</div>' : ''}
   ${v.errors.length ? `<div class="banner err"><b>直してから保存してください</b><ul style="margin:4px 0 0 18px;padding:0">${v.errors.map(e => `<li>${esc(e)}</li>`).join('')}</ul></div>` : ''}
   ${v.warns.length ? `<div class="banner warn"><ul style="margin:0 0 0 18px;padding:0">${v.warns.map(e => `<li>${esc(e)}</li>`).join('')}</ul></div>` : ''}
-  <b>変更の一覧（${ch.length} 件）</b>
+  <b>変更の一覧（${ch.filter(c => c.t !== 'imgsame').length} 件）</b>
   ${ch.length ? `<ul class="chg">${ch.map(c => `<li class="${c.cls || ''}">${c.h}</li>`).join('')}</ul>` : '<p class="help">変更はありません。</p>'}
-  ${st.pending.size ? `<b style="display:block;margin-top:12px">差し替える画像（${st.pending.size} 枚）</b><div class="imgs">${[...st.pending].map(([p, d]) => `<div class="it"><img src="${d.url}" alt=""><div><b>${esc(p.replace(/^images\//, ''))}</b><br>${d.w}×${d.h} ・ ${d.beforeSize ? fmtB(d.beforeSize) + ' → ' : ''}${fmtB(d.bytes.length)}<br>方式: ${esc(d.methodLabel)}<br>はみ出し: ${esc(d.fitText)}</div></div>`).join('')}</div>` : ''}
+  ${noChange && ch.length ? '<p class="help">書き換わる物がないので、コミットは作りません。</p>' : ''}
+  ${nImg ? `<b style="display:block;margin-top:12px">差し替える画像（${nImg} 枚）</b><div class="imgs">${pendGroups().filter(g => !g.d.unchanged).map(g => { const d = g.d; return `<div class="it"><img src="${d.url}" alt=""><div><b>${g.paths.length > 1 ? '同じ画像 × ' + g.paths.length + ' 枠（' + esc(groupNames(g.paths)) + '）' : esc(g.paths[0].replace(/^images\//, ''))}</b><br>${d.w}×${d.h} ・ ${g.paths.length === 1 && d.beforeSize ? fmtB(d.beforeSize) + ' → ' : ''}${fmtB(d.bytes.length)}<br>方式: ${esc(d.methodLabel)}<br>はみ出し: ${esc(d.fitText)}</div></div>`; }).join('')}</div>` : ''}
   <details style="margin-top:12px"><summary>config.json の差分</summary><div class="dfx" style="margin-top:8px">${lineDiff(st.baseText.replace(/\r\n/g, '\n'), txt)}</div></details>
   <label class="f">コミットメッセージ</label><input type="text" id="commitMsg" value="${esc(defMsg)}">
   <div id="saveState" class="help" style="margin-top:8px"></div>
@@ -898,7 +1015,7 @@ const conflict = m => { const e = new Error(m); e.ja = m; return e; };
 async function doSave() {
   if (saving) return; const v = validate(); if (v.errors.length || st.readOnly) return;
   saving = true; $('doSaveBtn').disabled = true;
-  const msg = $('commitMsg').value.trim() || 'Sphere 設定を更新';
+  const msg = $('commitMsg').value.trim() || 'VERSE CITY 設定を更新';
   try {
     const cfgText = configText();
     const R = `/repos/${S.repo}`, B = branchPath();
@@ -918,12 +1035,15 @@ async function doSave() {
       if (sha !== d.beforeSha) throw conflict(`画像 ${path} が、選んだあとに別の場所で書き換えられています。この画像を選び直すか、「読み直す」でやり直してください`);
     }
     const items = [];
-    const files = [[CFG_PATH, new TextEncoder().encode(cfgText)]].concat([...st.pending].map(([p, d]) => [p, d.bytes]));
-    let k = 0;
+    const real = [...st.pending].filter(([p, d]) => !d.unchanged);
+    if (!real.length && !computeChanges().some(c => c.t !== 'img' && c.t !== 'imgsame')) { saving = false; $('doSaveBtn').disabled = false; setSaveState('書き換わる物がないので、コミットは作りませんでした。'); return; }
+    const files = [[CFG_PATH, new TextEncoder().encode(cfgText)]].concat(real.map(([p, d]) => [p, d.bytes]));
+    let k = 0; const blobOf = new Map();     // 同じ中身（同じ画像データ）の blob は 1 回だけ作り、枠の数だけ木に並べる
+    const uniq = new Set(files.map(f => f[1])).size;
     for (const [path, bytes] of files) {
-      setSaveState(`アップロード中 ${++k} / ${files.length}: ${path}`);
-      const b = await gh('POST', `${R}/git/blobs`, { content: bytesB64(bytes), encoding: 'base64' });
-      items.push({ path, mode: '100644', type: 'blob', sha: b.sha });
+      let sha = blobOf.get(bytes);
+      if (!sha) { setSaveState(`アップロード中 ${++k} / ${uniq}: ${path}`); sha = (await gh('POST', `${R}/git/blobs`, { content: bytesB64(bytes), encoding: 'base64' })).sha; blobOf.set(bytes, sha); }
+      items.push({ path, mode: '100644', type: 'blob', sha });
     }
     setSaveState('コミットを作っています…');
     const tree = await gh('POST', `${R}/git/trees`, { base_tree: head.tree.sha, tree: items });
@@ -932,14 +1052,17 @@ async function doSave() {
     lastResult = { commit: commit.sha, files: files.map(f => f[0]), cfgBlob: items[0].sha };
     // 新しい状態を基準にする
     st.cfgSha = items[0].sha; const parsed = JSON.parse(cfgText);
+    const savedLocal = {}; real.forEach(([p, d]) => { savedLocal[p] = d.url; d.url = null; });
     st.pending.forEach(d => d.url && URL.revokeObjectURL(d.url));
     const mi = st.mems.findIndex(m => m.id === selMem), ss = selSlot.slice();
     initFromConfig(parsed, cfgText);    // 保存した内容を読み込み直した形にそろえる
     selMem = st.mems[mi] ? st.mems[mi].id : (st.mems[0] || {}).id; selSlot = ss;
     st.rev++;
+    if (st.shas) items.forEach(it => { if (it.path !== CFG_PATH) st.shas[it.path] = it.sha; });
+    Object.assign(st.local, savedLocal);    // 保存した画像は、手元のデータをそのまま出す（読み直すと新しい sha で読む）
     saving = false;
     $('modalBox').innerHTML = `<h3>保存しました</h3><p>コミット <code>${commit.sha.slice(0, 7)}</code> を ${S.test ? '手元のダミー' : esc(S.repo)} の ${esc(S.branch)} に書きました（${files.length} ファイル）。</p>
-     <p class="help">${S.test ? '' : 'GitHub Pages に反映されるまで、clubVERSE の Actions のコピーと Pages の更新で数分〜10 分ほどかかります。画像は同じ名前で上書きしたので、反映後もしばらく古い絵がキャッシュで出ることがあります。'}</p>
+     <p class="help">公開側への反映は保存から 1〜2 分、ワールドや他の人のブラウザには最大 10 分ほど古い絵が出ることがあります。</p>
      <div class="acts"><button class="pri" onclick="closeModal();renderAll()">閉じる</button></div>`;
     return;
   } catch (e) {
@@ -974,5 +1097,5 @@ $('modal').addEventListener('click', e => { if (e.target === $('modal')) closeMo
     renderAll();
   } else { renderSettings(); }
   show(h === 'posters-up' || h === 'posters-img' ? 'posters' : h);
-  window.__sv = { st, S, buildConfig, configText, computeChanges, validate, pickOne, pickMany, convertImage, quantizeRGBA, get up() { return up; }, get bulk() { return bulk; }, get last() { return lastResult; } };
+  window.__sv = { st, S, pickSame, get same() { return same; }, buildConfig, configText, computeChanges, validate, pickOne, pickMany, convertImage, quantizeRGBA, get up() { return up; }, get bulk() { return bulk; }, get last() { return lastResult; } };
 })();
