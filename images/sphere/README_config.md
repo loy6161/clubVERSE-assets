@@ -22,11 +22,15 @@ Sphere VERSE のワールドが起動時に読む設定ファイルです。手�
 | `members` | MEMBERS（出演者） | 20 |
 | `cd` | CD BOOTH（CD とポスター） | 9 |
 | `info11_15` | INFO 11-15 | 5 |
-| `info_wide` | INFO WIDE | 9 |
+| `info_wide1_3` | INFO WIDE 1-3 | 3（INFO_WIDE01〜03・外／入口／カジノの3か所の板） |
+| `info_wide4_6` | INFO WIDE 4-6 | 3（04〜06） |
+| `info_wide7_9` | INFO WIDE 7-9 | 3（07〜09） |
+
+旧キー `info_wide`（INFO WIDE 9枚を1つで）も今まで通り読めます。**`info_wide1_3` `info_wide4_6` `info_wide7_9` が書いてあればそちらを優先**し、書いていないものだけ `info_wide` の値を使います（`info_wide` だけなら3つとも同じ値）。今アップロードされている古いワールドは `info_wide` しか読まないので、新しいワールドを上げるまでは `info_wide` も残しておく。
 
 例: Sphere でライブの日は clubVERSE の一部を最初から切る
 ```
-"posters": { "info1_5": false, "info6_10": false, "weekly": true, "today": true, "members": false, "cd": false, "info11_15": false, "info_wide": false }
+"posters": { "info1_5": false, "info6_10": false, "weekly": true, "today": true, "members": false, "cd": false, "info11_15": false, "info_wide1_3": false, "info_wide4_6": false, "info_wide7_9": false }
 ```
 
 ## sky（空の写真）

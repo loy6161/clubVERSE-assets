@@ -8,6 +8,9 @@
     "members": false,
     "cd": false,
     "info11_15": false,
+    "info_wide1_3": false,
+    "info_wide4_6": false,
+    "info_wide7_9": false,
     "info_wide": false
   },
   "sky": {
