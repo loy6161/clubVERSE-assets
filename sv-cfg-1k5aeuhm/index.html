@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Sphere 設定エディタ</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="testBar" style="display:none">試験モード — 本物の GitHub には何も送りません。手元のダミーに書くだけです（URL の <code>?test=1</code> のときだけの状態です）</div>
+<header>
+ <h1>Sphere 設定エディタ<span class="mock" id="modeTag" style="display:none">試験モード</span><span class="ro" id="roTag" style="display:none">読み取り専用</span></h1>
+ <span class="dirty" id="dirty">未保存の変更: 0 件</span>
+ <button onclick="reloadAll()" id="reloadBtn">読み直す</button>
+ <button class="pri" onclick="openConfirm()" id="saveBtn">GitHub に保存</button>
+</header>
+<nav id="nav">
+ <button data-t="sets">出演者の組</button>
+ <button data-t="memory">プリセットメモリー</button>
+ <button data-t="posters">ポスター</button>
+ <button data-t="settings">設定（キー）</button>
+</nav>
+<main>
+<div id="topMsg"></div>
+
+<section class="tab" id="tab-sets">
+ <h2>出演者の組</h2>
+ <p class="lead">出演者ごとに、メモリーを 4 つ並べます。PA 卓の「次の出演者」でこの順に読み込まれます。枠を押してメモリーを選びます。メモリーの天井は、次の出演者の背景を先に読み込むのにも使われます（天井が「変えない」のメモリーは対象外）。</p>
+ <div class="card" id="setsBox"></div>
+ <div class="acts"><button onclick="addSet()" id="addSetBtn">＋ 出演者を追加</button><span class="help" id="setsCnt"></span></div>
+</section>
+
+<section class="tab" id="tab-memory">
+ <h2>プリセットメモリー</h2>
+ <p class="lead">1 つのメモリー＝屋根＋天井のプリセット＋ポストエフェクト＋照明の動き。名前をつけて保存し、出演者の組から呼び出します（最大 16 個）。「変えない」にした項目は、そのメモリーを呼んでも今の状態のままです。</p>
+ <div class="row">
+  <div class="col-l"><div class="card"><div id="memList"></div><button onclick="addMem()" id="addMemBtn" style="width:100%">＋ 新しいメモリー</button></div></div>
+  <div class="col-r"><div class="card" id="memEd"></div></div>
+ </div>
+</section>
+
+<section class="tab" id="tab-posters">
+ <h2>ポスター</h2>
+ <p class="lead">スイッチは「ワールドを開いたとき最初から読み込むか」。ケースを選ぶと、置かれている場所が見取り図で光ります。同じケースの板は、スイッチ 1 つで全部いっしょに出入りします。</p>
+ <div class="card"><div class="cases" id="cases"></div></div>
+ <div class="card mapcard" id="mapBox"></div>
+ <div class="card" style="margin-top:14px" id="caseBox"></div>
+ <div id="bulkBox"></div>
+ <div id="upBox"></div>
+ <details>
+  <summary>ケースと config.json のキーの対応表</summary>
+  <div class="tw" style="margin-top:8px"><table class="t" id="keyTbl"></table></div>
+  <p class="help">「面」は板 1 枚（1 枚の板に絵が 1〜5 枚並ぶ）。エリアの名前はシーン上のオブジェクト名から付けたもの（仮）。</p>
+  <p class="help"><code>info_wide</code> は古いワールド用の旧キーです。この画面では出さず、元の config.json にこのキーがあるときだけ、INFO WIDE 1-3 を変えたときに同じ値にします。</p>
+ </details>
+</section>
+
+<section class="tab" id="tab-settings">
+ <h2>設定（キー）</h2>
+ <p class="lead">最初に一度だけ入れます。このブラウザの中にだけ保存され、このリポジトリ専用のキーを使います。</p>
+ <div class="row">
+  <div class="col-r"><div class="card">
+   <label class="f" style="margin-top:0">GitHub のキー（このリポジトリ専用のトークン）</label>
+   <input type="password" id="setToken" autocomplete="off" spellcheck="false" placeholder="github_pat_…">
+   <label class="f">保存先のリポジトリ</label>
+   <input type="text" id="setRepo" autocomplete="off" spellcheck="false">
+   <label class="f">ブランチ</label>
+   <input type="text" id="setBranch" autocomplete="off" spellcheck="false">
+   <div class="acts"><button onclick="saveSettingsUi()">この設定を保存</button><button onclick="testConn()">接続テスト</button><button class="danger" onclick="clearToken()">キーをこのブラウザから消す</button></div>
+   <p class="help" id="connState"></p>
+   <p class="help">キーの作り方: GitHub の Settings → Developer settings → Fine-grained tokens で、リポジトリを <code>loy6161/clubVERSE</code> だけに絞り、権限は「Contents: Read and write」だけにします。キーはこのブラウザの中にだけ保存され、GitHub 以外には送られません。</p>
+   <p class="help" id="testLink" style="margin-top:14px"></p>
+  </div></div>
+  <div class="col-r"><div class="card">
+   <b>画像の変換設定</b>
+   <p class="help" style="margin-top:2px">画像を選んだときに自動でかける変換。ケースごとの既定です（画像を選んだあと、1 枚ごとに変えることもできます）。</p>
+   <div class="tw"><table class="t" id="convTbl"></table></div>
+   <p class="help">画像は、「減色した PNG」「色を減らさない PNG」「元のまま（選んだ画像が PNG で、大きさがぴったりのとき）」を作り、いちばん小さい物を自動で選びます（UPNG.js・MIT）。大きさは今のファイルの大きさに合わせて縮小します。ディザリングは、色数を減らしたときの階調をなめらかに見せます。</p>
+  </div></div>
+ </div>
+</section>
+
+<details>
+ <summary>出力される config.json を見る（いまの画面の内容）</summary>
+ <pre id="json"></pre>
+</details>
+<p class="help">保存を押すと、まず変更の一覧を出して確認します。</p>
+</main>
+
+<div class="modal" id="modal"><div class="box" id="modalBox"></div></div>
+<div id="toast" style="position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:#1c2030;color:#fff;padding:8px 16px;border-radius:99px;display:none;font-size:13px;z-index:30;max-width:90vw;pointer-events:none"></div>
+<input type="file" id="fileOne" accept="image/*">
+<input type="file" id="fileMany" accept="image/*" multiple>
+
+<script src="vendor/pako.min.js"></script>
+<script src="vendor/UPNG.js"></script>
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
