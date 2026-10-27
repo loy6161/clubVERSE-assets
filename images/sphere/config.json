@@ -105,7 +105,7 @@
       "name": "天空",
       "roof": -1,
       "ceiling": 1,
-      "fx": -1,
+      "fx": 2,
       "motion": -1,
       "color": -1
     },
@@ -153,7 +153,7 @@
       "name": "天空-きゃりりー",
       "roof": -1,
       "ceiling": 1,
-      "fx": -1,
+      "fx": 1,
       "motion": 0,
       "color": 15
     },
