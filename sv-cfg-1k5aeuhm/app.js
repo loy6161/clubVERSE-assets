@@ -42,7 +42,7 @@ const FX = [
   { v: 3, n: 'カメラ用（やや暗い）', s: 'Switch_3 CAMERA用' },
   { v: 4, n: '暗め・Bloom 強い', s: 'Switch_5' },
   { v: 5, n: 'ライブ用（暖色）', s: 'Switch_4_forLIVE' }];
-const MOTION = ['ゆっくり楕円', '速い楕円', '左右スイープ', 'ステージ集中', '客席に散らす', '真上', '真下'];
+const MOTION = ['ゆっくり楕円', '速い楕円', '左右スイープ', 'ステージ集中', '客席に散らす', '真上', '真下', 'ピンスポット'];
 const COLORS = [
   { v: 0, n: '暖白', c: '#FFE1B7' }, { v: 1, n: '白', c: '#FFFFFF' }, { v: 2, n: '青白', c: '#C5E5FF' }, { v: 3, n: '赤', c: '#FF3B30' },
   { v: 4, n: 'オレンジ', c: '#FF7A1A' }, { v: 5, n: '琥珀', c: '#FFB020' }, { v: 6, n: '黄緑', c: '#B4FF3C' }, { v: 7, n: '緑', c: '#3CFF6E' },
@@ -51,7 +51,7 @@ const COLOR_SPECIAL = [{ v: 12, n: '曲に合わせる' }, { v: 13, n: 'パレ�
 const COLOR_LIGHT = new Set([0, 1, 2, 5, 6, 7, 8, 11]);   // 明るい色は黒文字
 const MAX_MEM = 16, MAX_SETS = 24;
 // メモリーの 5 項目: [キー, 最大値, 表示名]（最大値はワールド SphereVersePresetMemory.cs と同じ）
-const MEMF = [['roof', 3, '屋根'], ['ceiling', 22, '天井'], ['fx', 5, 'ポストエフェクト'], ['motion', 6, '照明の動き'], ['color', 15, '照明の色']];
+const MEMF = [['roof', 3, '屋根'], ['ceiling', 22, '天井'], ['fx', 5, 'ポストエフェクト'], ['motion', 7, '照明の動き'], ['color', 15, '照明の色']];
 
 /* ---------- ポスターのケース（大きさは今の実ファイルの実測。枚ごとの実寸は data.js の FILESZ） ---------- */
 const rng = (a, b) => Array.from({ length: b - a + 1 }, (_, i) => a + i);
