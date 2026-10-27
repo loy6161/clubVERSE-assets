@@ -172,3 +172,14 @@ nav .grp:last-child .gname{border-bottom-color:transparent}
 .slot.on{border-color:var(--acc);background:#f1f3ff}
 .chg li.noop{color:var(--sub);background:#f6f6f8}
 .chg li.noop b{color:var(--sub)}
+
+/* 照明の色 */
+.chips.colors .chip{display:flex;flex-direction:column}
+.chips.colors .chip .th{height:34px}
+.chips.colors .chip.sp .th{background:repeating-linear-gradient(45deg,#e6e9f5,#e6e9f5 6px,#fff 6px,#fff 12px)}
+.chips.colors .chip.light b{color:#111}
+.chips.colors .chip.cc{background:var(--cc);justify-content:center}
+.chips.colors .chip.cc b{padding:12px 2px;background:transparent;color:#fff;text-shadow:0 0 3px rgba(0,0,0,.6)}
+.chips.colors .chip.cc.light b{color:#111;text-shadow:none}
+.chips.colors .chip.cc.sel{border-color:var(--acc);box-shadow:0 0 0 2px #fff inset}
+.chips.colors .chip.cc.sel b{background:transparent}
