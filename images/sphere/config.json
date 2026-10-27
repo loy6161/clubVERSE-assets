@@ -132,26 +132,43 @@
       "fx": -1,
       "motion": -1,
       "color": -1
+    },
+    {
+      "name": "オーロラ",
+      "roof": -1,
+      "ceiling": 7,
+      "fx": -1,
+      "motion": 0,
+      "color": 15
+    },
+    {
+      "name": "プラネタリウム-きゃりりー",
+      "roof": -1,
+      "ceiling": 2,
+      "fx": -1,
+      "motion": 0,
+      "color": 15
+    },
+    {
+      "name": "天空-きゃりりー",
+      "roof": -1,
+      "ceiling": -1,
+      "fx": -1,
+      "motion": 0,
+      "color": 15
+    },
+    {
+      "name": "アリーナ -きゃりりー-",
+      "roof": -1,
+      "ceiling": 10,
+      "fx": -1,
+      "motion": 1,
+      "color": 12
     }
   ],
   "sets": [
     {
-      "name": "SchuShia",
-      "presets": [
-        22,
-        1,
-        20,
-        18
-      ],
-      "memories": [
-        "雪の街",
-        "天空",
-        "海底",
-        "砂浜"
-      ]
-    },
-    {
-      "name": "新しい出演者",
+      "name": "きゃりりー",
       "presets": [
         -1,
         -1,
@@ -163,6 +180,21 @@
         "",
         "",
         ""
+      ]
+    },
+    {
+      "name": "SchuShia",
+      "presets": [
+        1,
+        1,
+        20,
+        18
+      ],
+      "memories": [
+        "天空",
+        "天空",
+        "海底",
+        "砂浜"
       ]
     }
   ]
