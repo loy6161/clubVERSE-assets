@@ -152,7 +152,7 @@
     {
       "name": "天空-きゃりりー",
       "roof": -1,
-      "ceiling": -1,
+      "ceiling": 1,
       "fx": -1,
       "motion": 0,
       "color": 15
@@ -172,7 +172,7 @@
       "presets": [
         7,
         2,
-        -1,
+        1,
         10
       ],
       "memories": [
