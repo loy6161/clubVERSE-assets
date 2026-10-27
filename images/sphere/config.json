@@ -92,10 +92,78 @@
       "https://loy6161.github.io/clubVERSE-assets/images/sphere/sky/snowcity.jpg"
     ]
   },
+  "presets": [
+    {
+      "name": "雪の街",
+      "roof": -1,
+      "ceiling": 22,
+      "fx": -1,
+      "motion": -1,
+      "color": -1
+    },
+    {
+      "name": "天空",
+      "roof": -1,
+      "ceiling": 1,
+      "fx": -1,
+      "motion": -1,
+      "color": -1
+    },
+    {
+      "name": "海底",
+      "roof": -1,
+      "ceiling": 20,
+      "fx": -1,
+      "motion": -1,
+      "color": -1
+    },
+    {
+      "name": "砂浜",
+      "roof": -1,
+      "ceiling": 18,
+      "fx": -1,
+      "motion": -1,
+      "color": -1
+    },
+    {
+      "name": "スタジアム",
+      "roof": -1,
+      "ceiling": 21,
+      "fx": -1,
+      "motion": -1,
+      "color": -1
+    }
+  ],
   "sets": [
     {
-      "name": "例（書き換えて使う）",
-      "presets": []
+      "name": "SchuShia",
+      "presets": [
+        22,
+        1,
+        20,
+        18
+      ],
+      "memories": [
+        "雪の街",
+        "天空",
+        "海底",
+        "砂浜"
+      ]
+    },
+    {
+      "name": "新しい出演者",
+      "presets": [
+        -1,
+        -1,
+        -1,
+        -1
+      ],
+      "memories": [
+        "",
+        "",
+        "",
+        ""
+      ]
     }
   ]
 }
