@@ -37,7 +37,7 @@ input[type=text],input[type=password],select{width:100%;font:inherit;padding:7px
 .tag{display:inline-block;font-size:11px;padding:0 7px;border-radius:99px;background:var(--acc2);color:var(--acc);margin-right:3px;white-space:nowrap}
 .set .hd{display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap}
 .set .hd input{flex:1;min-width:150px;font-weight:700;width:auto}
-.slots{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.slots{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
 .slot{border:2px dashed var(--line);border-radius:9px;padding:6px;cursor:pointer;background:#fafbfd;min-width:0}
 .slot.sel{border:2px solid var(--acc);background:var(--acc2)}
 .slot .n{font-size:11px;color:var(--sub)}

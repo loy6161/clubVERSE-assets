@@ -32,8 +32,8 @@ const ROOF = [
   { v: 1, n: '客席側だけ開く', s: '' },
   { v: 3, n: 'ステージ側だけ開く', s: '' },
   { v: 2, n: '全開', s: '客席側＋ステージ側' }];
-const CEIL_NAMES = { 0: 'ガラス', 1: '天空', 2: 'プラネタリウム', 3: '宇宙', 5: '深海', 7: 'オーロラ', 9: '桜', 10: 'アリーナ', 11: '動画', 12: '廃墟', 13: '海辺', 15: '星空', 16: '中世', 17: '九龍城', 18: '砂浜', 19: '月夜', 20: '海底', 21: 'スタジアム', 22: '雪の街' };
-const CEIL_GRAD = { 0: '#9fd3e6,#e8f6fb', 11: '#444,#999' };
+const CEIL_NAMES = { 0: 'ガラス', 1: '天空', 2: 'プラネタリウム', 3: '宇宙', 5: '深海', 7: 'オーロラ', 9: '桜', 10: 'アリーナ', 11: '動画', 12: '廃墟', 13: '海辺', 15: '星空', 16: '中世', 17: '九龍城', 18: '砂浜', 19: '月夜', 20: '海底', 21: 'スタジアム', 22: '雪の街', 23: 'ハロウィン' };   // 23 = 2026-10-28
+const CEIL_GRAD = { 0: '#9fd3e6,#e8f6fb', 11: '#444,#999', 23: '#2a0f3a,#b8261c' };
 const CEIL_MODES = Object.keys(CEIL_NAMES).map(Number);
 const FX = [
   { v: 0, n: 'なし', s: 'Off' },
@@ -42,16 +42,18 @@ const FX = [
   { v: 3, n: 'カメラ用（やや暗い）', s: 'Switch_3 CAMERA用' },
   { v: 4, n: '暗め・Bloom 強い', s: 'Switch_5' },
   { v: 5, n: 'ライブ用（暖色）', s: 'Switch_4_forLIVE' }];
-const MOTION = ['ゆっくり楕円', '速い楕円', '左右スイープ', 'ステージ集中', '客席に散らす', '真上', '真下', 'ピンスポット'];
+const MOTION = ['ゆっくり楕円', '速い楕円', '左右スイープ', 'ステージ集中（旧）', '客席に散らす（旧）', '真上', '真下', 'ピンスポット', '速いクロス', '客席ウェーブ', 'サーチライト', '円周チェイス', 'ジャンプ切り替え', '上下バウンス'];   // 2026-10-28: 8-13 added; 3 / 4 are off the world's panel (old memories still work)
 const COLORS = [
   { v: 0, n: '暖白', c: '#FFE1B7' }, { v: 1, n: '白', c: '#FFFFFF' }, { v: 2, n: '青白', c: '#C5E5FF' }, { v: 3, n: '赤', c: '#FF3B30' },
   { v: 4, n: 'オレンジ', c: '#FF7A1A' }, { v: 5, n: '琥珀', c: '#FFB020' }, { v: 6, n: '黄緑', c: '#B4FF3C' }, { v: 7, n: '緑', c: '#3CFF6E' },
   { v: 8, n: '水色', c: '#46D8FF' }, { v: 9, n: '青', c: '#4169E1' }, { v: 10, n: '紫', c: '#9400D3' }, { v: 11, n: 'ピンク', c: '#FF5FA8' }];
 const COLOR_SPECIAL = [{ v: 12, n: '曲に合わせる' }, { v: 13, n: 'パレット' }, { v: 14, n: '映像の色' }, { v: 15, n: '天井の色' }];
 const COLOR_LIGHT = new Set([0, 1, 2, 5, 6, 7, 8, 11]);   // 明るい色は黒文字
-const MAX_MEM = 16, MAX_SETS = 24;
+// 2026-10-28 loyさん「プリセットメモリー16個だとたりない。50個にして」「メモリースロット枠が4つだと足りない10個にしておいて」
+const MAX_MEM = 50, MAX_SETS = 24, SLOTS = 10;
+const emptySlots = () => Array(SLOTS).fill(null);
 // メモリーの 5 項目: [キー, 最大値, 表示名]（最大値はワールド SphereVersePresetMemory.cs と同じ）
-const MEMF = [['roof', 3, '屋根'], ['ceiling', 22, '天井'], ['fx', 5, 'ポストエフェクト'], ['motion', 7, '照明の動き'], ['color', 15, '照明の色']];
+const MEMF = [['roof', 3, '屋根'], ['ceiling', 23, '天井'], ['fx', 5, 'ポストエフェクト'], ['motion', 13, '照明の動き'], ['color', 15, '照明の色']];
 
 /* ---------- ポスターのケース（大きさは今の実ファイルの実測。枚ごとの実寸は data.js の FILESZ） ---------- */
 const rng = (a, b) => Array.from({ length: b - a + 1 }, (_, i) => a + i);
@@ -236,15 +238,15 @@ function parseMem(p) {
   return m;
 }
 function parseSet(s, byName) {
-  if (!isObj(s)) return { name: '', name0: '', p: [null, null, null, null], rawEntry: s, raw: null, info: {} };
+  if (!isObj(s)) return { name: '', name0: '', p: emptySlots(), rawEntry: s, raw: null, info: {} };
   const rawP = s.presets, rawM = s.memories, info = {};
   if (rawP !== undefined && rawP !== null && !Array.isArray(rawP)) info.badP = true;
   if (rawM !== undefined && rawM !== null && !Array.isArray(rawM)) info.badM = true;
   const aP = Array.isArray(rawP) ? rawP : [], aM = Array.isArray(rawM) ? rawM : [];
-  if (aP.length > 4) info.extraP = true;
-  if (aM.length > 4) info.extraM = true;
-  const p = [null, null, null, null];
-  for (let i = 0; i < 4; i++) {
+  if (aP.length > SLOTS) info.extraP = true;
+  if (aM.length > SLOTS) info.extraM = true;
+  const p = emptySlots();
+  for (let i = 0; i < SLOTS; i++) {
     const nm = aM[i], nu = aP[i]; let why = null;
     if (nm !== undefined && nm !== null && typeof nm !== 'string') why = `memories の ${i + 1} 番目 ${jstr(nm)} が文字列ではありません`;
     else if (nu !== undefined && nu !== null && (typeof nu !== 'number' || !Number.isInteger(nu) || nu < -1)) why = `presets の ${i + 1} 番目 ${jstr(nu)} が整数ではありません`;
@@ -292,7 +294,9 @@ function memOut(m) {
   });
   return out;
 }
-const norm4 = (arr, fill) => { const a = Array.isArray(arr) ? arr.slice(0, 4) : []; while (a.length < 4) a.push(fill); return a.map(v => v == null ? fill : v); };
+const normN = (arr, fill) => { const a = Array.isArray(arr) ? arr.slice(0, SLOTS) : []; while (a.length < SLOTS) a.push(fill); return a.map(v => v == null ? fill : v); };
+// 書き出す長さ: 最後に埋まっている枠まで（4 枠より短くはしない。旧形式の 4 枠と同じ形を保つ）
+const usedLen = g => { let n = 4; for (let i = 0; i < SLOTS; i++) if (g.p[i] !== -1 || g.m[i] !== '') n = Math.max(n, i + 1); return n; };
 function slotNumbers(s) {
   return {
     p: s.p.map(sl => !sl ? -1 : sl.t === 'm' ? ((memOf(sl.id) || {}).ceiling ?? -1) : sl.t === 'old' ? sl.v : sl.t === 'bad' ? (sl.rawP ?? -1) : -1),
@@ -304,10 +308,11 @@ function setOut(s) {
   const out = s.raw ? clone(s.raw) : {};
   if (!s.raw || s.name !== s.name0) out.name = s.name;
   const g = slotNumbers(s);
-  // presets: 天井の mode 番号（数値）4 枠。位置を保ち、-1 は空き・変えない（ワールドの背景の先読みが読む）
-  if (!s.raw || !deepEq(norm4(s.raw.presets, -1), g.p)) out.presets = g.p;
-  // memories: 枠ごとのメモリーの名前 4 枠（空きは ""）。元が旧形式で、選び直していなければ足さない
-  if (!s.raw || !deepEq(norm4(s.raw.memories, ''), g.m)) out.memories = g.m;
+  const n = usedLen(g);
+  // presets: 天井の mode 番号（数値）最大 10 枠。位置を保ち、-1 は空き・変えない（ワールドの先読みが読む）
+  if (!s.raw || !deepEq(normN(s.raw.presets, -1), g.p)) out.presets = g.p.slice(0, n);
+  // memories: 枠ごとのメモリーの名前（空きは ""）。ワールドはこの名前でメモリーを押す。元が旧形式で、選び直していなければ足さない
+  if (!s.raw || !deepEq(normN(s.raw.memories, ''), g.m)) out.memories = g.m.slice(0, n);
   return out;
 }
 function postersOut() {
@@ -386,7 +391,7 @@ function computeChanges() {
     if (!b) { ch.push({ t: 'set', cls: 'del', h: `組を削除: <b>${esc(a.name)}</b>` }); continue; }
     const d = [];
     if (a.name !== b.name) d.push(`名前 ${esc(a.name)} → ${esc(b.name)}`);
-    for (let j = 0; j < 4; j++) {
+    for (let j = 0; j < SLOTS; j++) {
       const la = slotLabelOf(a.p[j], st.baseMems), lb = slotLabelOf(b.p[j]);
       if (la !== lb) d.push(`メモリー${j + 1}: ${esc(la)} → ${esc(lb)}`);
     }
@@ -436,7 +441,7 @@ function validate() {
     if ('rawEntry' in s) { errors.push(`組 ${i + 1}: { } のかたまりではありません: ${jstr(s.rawEntry)}。削除してください`); return; }
     if (s.info.badP) errors.push(`組 ${i + 1}「${s.name}」: presets が配列ではありません`);
     if (s.info.badM) errors.push(`組 ${i + 1}「${s.name}」: memories が配列ではありません`);
-    if (s.info.extraP || s.info.extraM) warns.push(`組 ${i + 1}「${s.name}」: presets / memories に 5 個目以降があります。ワールドは読みません（この組を変えて保存すると消えます）`);
+    if (s.info.extraP || s.info.extraM) warns.push(`組 ${i + 1}「${s.name}」: presets / memories に 11 個目以降があります。ワールドは読みません（この組を変えて保存すると消えます）`);
     s.p.forEach((sl, j) => {
       if (sl && sl.t === 'miss') errors.push(`組 ${i + 1}「${s.name}」のメモリー ${j + 1}「${sl.v}」が見つかりません。選び直してください`);
       if (sl && sl.t === 'bad') errors.push(`組 ${i + 1}「${s.name}」のメモリー ${j + 1}: ${sl.why}。選び直してください`);
@@ -497,7 +502,7 @@ function selSlotF(i, j) { selSlot = [i, j]; renderSets(); }
 function pick(i, j, id) { st.sets[i].p[j] = id == null ? null : { t: 'm', id }; renderSets(); }
 function mv(i, d) { const k = i + d; if (k < 0 || k >= st.sets.length) return; [st.sets[i], st.sets[k]] = [st.sets[k], st.sets[i]]; selSlot = [k, selSlot[1]]; renderSets(); }
 function delSet(i) { if (!confirm(`組「${st.sets[i].name}」を削除します。よいですか？（保存するまでは「読み直す」で戻せます）`)) return; st.sets.splice(i, 1); selSlot = [0, 0]; renderSets(); }
-function addSet() { if (st.sets.length >= MAX_SETS) return; st.sets.push({ name: '新しい出演者', name0: '', p: [null, null, null, null], raw: null, info: {} }); selSlot = [st.sets.length - 1, 0]; renderSets(); }
+function addSet() { if (st.sets.length >= MAX_SETS) return; st.sets.push({ name: '新しい出演者', name0: '', p: emptySlots(), raw: null, info: {} }); selSlot = [st.sets.length - 1, 0]; renderSets(); }
 
 /* ---------- 画面: プリセットメモリー ---------- */
 function memListHtml() {
