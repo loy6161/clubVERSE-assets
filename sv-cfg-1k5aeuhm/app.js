@@ -42,7 +42,7 @@ const FX = [
   { v: 3, n: 'カメラ用（やや暗い）', s: 'Switch_3 CAMERA用' },
   { v: 4, n: '暗め・Bloom 強い', s: 'Switch_5' },
   { v: 5, n: 'ライブ用（暖色）', s: 'Switch_4_forLIVE' }];
-const MOTION = ['ゆっくり楕円', '速い楕円', '左右スイープ', 'ステージ集中（旧）', '客席に散らす（旧）', '真上', '真下', 'ピンスポット', '速いクロス', '客席ウェーブ', 'サーチライト', '円周チェイス', 'ジャンプ切り替え', '上下バウンス'];   // 2026-10-28: 8-13 added; 3 / 4 are off the world's panel (old memories still work)
+const MOTION = ['ゆっくり楕円', '速い楕円', '左右スイープ', 'ステージ集中（旧）', '客席に散らす（旧）', '真上', '真下', 'ピンスポット', '高速楕円', '客席ウェーブ', 'サーチライト', '円周チェイス', 'ジャンプ切り替え', '上下バウンス'];   // 2026-10-28: 8-13 added; 3 / 4 are off the world's panel (old memories still work)
 const COLORS = [
   { v: 0, n: '暖白', c: '#FFE1B7' }, { v: 1, n: '白', c: '#FFFFFF' }, { v: 2, n: '青白', c: '#C5E5FF' }, { v: 3, n: '赤', c: '#FF3B30' },
   { v: 4, n: 'オレンジ', c: '#FF7A1A' }, { v: 5, n: '琥珀', c: '#FFB020' }, { v: 6, n: '黄緑', c: '#B4FF3C' }, { v: 7, n: '緑', c: '#3CFF6E' },
