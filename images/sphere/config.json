@@ -172,6 +172,14 @@
       "fx": 2,
       "motion": 0,
       "color": 15
+    },
+    {
+      "name": "ハロウィン",
+      "roof": -1,
+      "ceiling": 23,
+      "fx": 5,
+      "motion": 8,
+      "color": -1
     }
   ],
   "sets": [
