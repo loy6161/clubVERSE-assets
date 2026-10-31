@@ -184,7 +184,7 @@
       "ceiling": 23,
       "fx": 5,
       "motion": 8,
-      "color": -1,
+      "color": 15,
       "audiolink": 1
     },
     {
@@ -193,7 +193,7 @@
       "ceiling": 9,
       "fx": 2,
       "motion": 0,
-      "color": -1,
+      "color": 15,
       "audiolink": 0
     },
     {
@@ -202,7 +202,7 @@
       "ceiling": 17,
       "fx": 5,
       "motion": 8,
-      "color": -1,
+      "color": 15,
       "audiolink": 1
     },
     {
@@ -211,7 +211,52 @@
       "ceiling": 1,
       "fx": 2,
       "motion": 8,
-      "color": -1,
+      "color": 15,
+      "audiolink": 1
+    },
+    {
+      "name": "雪の街・Schu*Shia",
+      "roof": -1,
+      "ceiling": 22,
+      "fx": 5,
+      "motion": 7,
+      "color": 15,
+      "audiolink": 0
+    },
+    {
+      "name": "天空・Schu*Shia",
+      "roof": -1,
+      "ceiling": 1,
+      "fx": 2,
+      "motion": 0,
+      "color": 15,
+      "audiolink": 0
+    },
+    {
+      "name": "海底・Schu*Shia",
+      "roof": -1,
+      "ceiling": 20,
+      "fx": 5,
+      "motion": 0,
+      "color": 15,
+      "audiolink": 0
+    },
+    {
+      "name": "砂浜・Schu*Shia",
+      "roof": -1,
+      "ceiling": 18,
+      "fx": 2,
+      "motion": 8,
+      "color": 15,
+      "audiolink": 1
+    },
+    {
+      "name": "スタジアム・Schu*Shia",
+      "roof": -1,
+      "ceiling": 21,
+      "fx": 5,
+      "motion": 8,
+      "color": 15,
       "audiolink": 1
     }
   ],
