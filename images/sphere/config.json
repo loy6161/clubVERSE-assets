@@ -145,7 +145,7 @@
       "name": "プラネタリウム-きゃりりー",
       "roof": -1,
       "ceiling": 2,
-      "fx": -1,
+      "fx": 3,
       "motion": 0,
       "color": 15
     },
@@ -153,7 +153,7 @@
       "name": "天空-きゃりりー",
       "roof": -1,
       "ceiling": 1,
-      "fx": 1,
+      "fx": 2,
       "motion": 0,
       "color": 15
     },
@@ -170,7 +170,7 @@
       "roof": -1,
       "ceiling": 2,
       "fx": 2,
-      "motion": -1,
+      "motion": 0,
       "color": 15
     }
   ],
