@@ -531,27 +531,32 @@ function evDel(i) { st.ev.members.splice(i, 1); renderEntry(); }
 
 /* ---------- 画面: 出演者の組 ---------- */
 const slotPre = sl => { const m = sl && sl.t === 'm' ? memOf(sl.id) : null; return !!m && m.ceiling < 0; };
+// 2026-11-01 (loyさん「文字ばっかりで、なんか真っ白でめちゃ見づらいから改善して」「サムネとか使って、視覚的に分かりやすくして」): 組ごとのカード（色の帯・番号・名前・使っている数）、
+//  メモリーは天井のサムネ付きのタイル（空きは点線の＋）
+const SET_COLORS = ['#5b5bd6', '#2fa58a', '#e07a3f', '#d6487a', '#3a8fd6', '#8a5bd6', '#c49a1c', '#3aa0a8'];
 function renderSets() {
   $('setsBox').innerHTML = st.sets.length ? st.sets.map((s, i) => {
-    if ('rawEntry' in s) return `<div class="set"><div class="banner err">${i + 1} 番目は組の形式（{ } のかたまり）ではありません: <code>${esc(jstr(s.rawEntry))}</code> <button class="sm danger" onclick="delSet(${i})">削除</button></div></div>`;
-    return `<div class="set">
-  <div class="hd"><span class="tag">${i + 1}番目</span><input type="text" value="${esc(s.name)}" oninput="st.sets[${i}].name=this.value;updateDirty()">
-   <button class="sm" onclick="mv(${i},-1)">↑</button><button class="sm" onclick="mv(${i},1)">↓</button><button class="sm danger" onclick="delSet(${i})">削除</button></div>
-  <div class="slots">${s.p.map((sl, j) => {
+    if ('rawEntry' in s) return `<div class="set2"><div class="bar" style="background:var(--bad)"></div><div class="body"><div class="banner err">${i + 1} 番目は組の形式（{ } のかたまり）ではありません: <code>${esc(jstr(s.rawEntry))}</code> <button class="sm danger" onclick="delSet(${i})">削除</button></div></div></div>`;
+    const used = s.p.filter(x => x).length;
+    return `<div class="set2"><div class="bar" style="background:${SET_COLORS[i % SET_COLORS.length]}"></div><div class="body">
+  <div class="hd"><span class="no">${i + 1}</span><input type="text" class="nm" value="${esc(s.name)}" placeholder="出演者の名前" oninput="st.sets[${i}].name=this.value;updateDirty()">
+   <span class="cnt">${used} / ${SLOTS}</span><button class="sm" onclick="mv(${i},-1)" title="上へ">↑</button><button class="sm" onclick="mv(${i},1)" title="下へ">↓</button><button class="sm danger" onclick="delSet(${i})">削除</button></div>
+  <div class="tiles">${s.p.map((sl, j) => {
       const sel = selSlot[0] === i && selSlot[1] === j; const m = sl && sl.t === 'm' ? memOf(sl.id) : null;
       const bad = sl && (sl.t === 'miss' || sl.t === 'bad');
-      let inner;
-      if (m) inner = `<div class="th" ${thAttr(m.ceiling)}></div><b>${esc(m.name)}</b>${m.ceiling < 0 ? '<small class="nopre">先読みなし</small>' : ''}`;
-      else if (sl && sl.t === 'old') inner = `<div class="em" style="flex-direction:column"><span>旧形式</span><span>天井 ${esc(ceilLabel(sl.v))}</span></div>`;
-      else if (sl && sl.t === 'miss') inner = `<div class="em" style="color:var(--bad)">${esc(sl.v)}<br>（見つかりません）</div>`;
-      else if (sl && sl.t === 'bad') inner = `<div class="em" style="color:var(--bad)">値が正しくありません</div>`;
-      else inner = `<div class="em">空き</div>`;
-      return `<div class="slot ${sel ? 'sel' : ''} ${bad ? 'bad' : ''}" onclick="selSlotF(${i},${j})"><div class="n">メモリー ${j + 1}</div>${inner}</div>`;
+      const k = `<span class="k">${j + 1}</span>`;
+      let cls = 'tile', inner;
+      if (m) inner = `${k}${m.ceiling < 0 ? '<span class="w">先読みなし</span>' : ''}<div class="th" ${thAttr(m.ceiling)}></div><div class="lb"><b>${esc(m.name)}</b><small>${esc(m.ceiling < 0 ? '天井は変えない' : ceilLabel(m.ceiling))}</small></div>`;
+      else if (sl && sl.t === 'old') inner = `${k}<div class="th" ${thAttr(sl.v)}></div><div class="lb"><b>旧形式</b><small>天井 ${esc(ceilLabel(sl.v))}</small></div>`;
+      else if (sl && sl.t === 'miss') { cls += ' bad'; inner = `${k}<div class="em">${esc(sl.v)}<br>（見つかりません）</div>`; }
+      else if (sl && sl.t === 'bad') { cls += ' bad'; inner = `${k}<div class="em">値が正しくありません</div>`; }
+      else { cls += ' empty'; inner = `${k}<div class="plus">＋</div>`; }
+      return `<div class="${cls} ${sel ? 'sel' : ''}" onclick="selSlotF(${i},${j})" title="メモリー ${j + 1}">${inner}</div>`;
     }).join('')}</div>
   ${s.p.filter(x => x && x.t === 'bad').map(x => `<p class="help" style="color:var(--bad);margin:4px 0 0">${esc(x.why)}</p>`).join('')}
   ${selSlot[0] === i ? pickerHtml(i) : ''}
- </div>`;
-  }).join('<hr style="border:0;border-top:1px solid var(--line);margin:14px 0">') : '<p class="help">組がありません。「＋ 出演者を追加」で作ります。</p>';
+ </div></div>`;
+  }).join('') : '<p class="help">組がありません。「＋ 出演者を追加」で作ります。</p>';
   $('setsCnt').textContent = `${st.sets.length} / ${MAX_SETS} 組`;
   $('addSetBtn').disabled = st.sets.length >= MAX_SETS;
   updateDirty();
