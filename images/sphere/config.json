@@ -183,7 +183,8 @@
       "ceiling": 23,
       "fx": 5,
       "motion": 8,
-      "color": -1
+      "color": -1,
+      "audiolink": 1
     }
   ],
   "sets": [
