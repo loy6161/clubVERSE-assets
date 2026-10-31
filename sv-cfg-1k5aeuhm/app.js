@@ -277,6 +277,8 @@ function initFromConfig(cfg, text) {
   st.sets = (Array.isArray(cfg.sets) ? cfg.sets : []).map(s => parseSet(s, byName));
   st.sets.forEach(s => { if (s.p) s.p.forEach(sl => { if (sl && sl.t === 'm') { const mm = memOf(sl.id); if (mm && sl.pv !== mm.ceiling) sl.mis = sl.pv; } }); });
   st.baseSets = clone(st.sets);
+  st.ev = parseEntry(cfg.entryVideo); st.baseEv = clone(st.ev);
+  if (cfg.entryVideo !== undefined && !isObj(cfg.entryVideo)) st.topBad.push('entryVideo が { } ではありません');
   st.pending.forEach(v => v.url && URL.revokeObjectURL(v.url)); st.pending.clear();
   selMem = st.mems.length ? st.mems[0].id : null; selSlot = [0, 0]; up = null; bulk = null; selImg = null; selBoard = null;
 }
@@ -347,6 +349,7 @@ function buildConfig() {
   if (!('posters' in out) && want.posters) out.posters = pOut;
   if (!('presets' in out) && want.presets) out.presets = presets;
   if (!('sets' in out) && want.sets) out.sets = sets;
+  if ('entryVideo' in base || st.ev.on || st.ev.members.length) out.entryVideo = entryOut();
   return out;
 }
 function configText() {
@@ -398,6 +401,7 @@ function computeChanges() {
     }
     if (d.length) ch.push({ t: 'set', h: `組 ${i + 1} <b>${esc(b.name)}</b>: ${d.join(' / ')}` });
   }
+  entryChanges().forEach(h => ch.push({ t: 'entry', h }));
   const bp = st.baseCfg && st.baseCfg.posters;
   if (isObj(bp) && 'info_wide' in bp && !!st.posters.info_wide1_3 !== !!st.basePosters.info_wide1_3) ch.push({ t: 'poster', h: `旧キー <b>info_wide</b>（古いワールド用）: ${bp.info_wide} → <b>${!!st.posters.info_wide1_3}</b>（INFO WIDE 1-3 に合わせます）` });
   pendGroups().forEach(g => { const v = g.d, path = g.paths[0];
@@ -451,9 +455,63 @@ function validate() {
     });
     if (!s.name.trim()) warns.push(`組 ${i + 1} の名前が空です`);
   });
+  entryProblems().forEach(t => errors.push('ENTRY動画: ' + t));
   try { JSON.parse(configText()); } catch (e) { errors.push('config.json が JSON になりません: ' + e.message); }
   return { errors, warns };
 }
+
+/* ---------- ENTRY動画（2026-10-31）: config.json "entryVideo": { "on": true/false, "members": [ { "name": 表示名, "slot": 1-10 } ] } ---------- */
+const EV_SLOTS = 10;
+const evUrl = n => `https://allverse.jp/sphere/assets/media/entry/entry_${String(n).padStart(2, '0')}.mp4`;
+function parseEntry(v) {
+  const e = { on: false, members: [], raw: isObj(v) ? v : null };
+  if (!isObj(v)) return e;
+  e.on = v.on === true;
+  if (Array.isArray(v.members)) v.members.forEach(m => { if (isObj(m)) e.members.push({ name: typeof m.name === 'string' ? m.name : '', slot: Number.isInteger(m.slot) ? m.slot : 0 }); });
+  return e;
+}
+function entryOut() {
+  const base = isObj(st.baseCfg && st.baseCfg.entryVideo) ? st.baseCfg.entryVideo : {};
+  const o = Object.assign({}, base); o.on = st.ev.on; o.members = st.ev.members.map(m => ({ name: m.name.trim(), slot: m.slot }));
+  return o;
+}
+function entryProblems() {
+  const e = [];
+  st.ev.members.forEach((m, i) => {
+    if (!m.name.trim()) e.push(`${i + 1} 人目の名前が空です`);
+    if (!(m.slot >= 1 && m.slot <= EV_SLOTS)) e.push(`${i + 1} 人目${m.name.trim() ? '「' + m.name.trim() + '」' : ''}の枠が選ばれていません`);
+  });
+  const seen = new Set(); st.ev.members.forEach(m => { const n = m.name.trim(); if (n && seen.has(n)) e.push(`「${n}」が 2 回登録されています`); seen.add(n); });
+  return e;
+}
+function entryChanges() {
+  const a = st.baseEv, b = st.ev, ch = [];
+  if (!a) return ch;
+  if (a.on !== b.on) ch.push(`ENTRY動画: ${a.on ? '流す' : '流さない'} → <b>${b.on ? '流す' : '流さない'}</b>`);
+  const fa = a.members.map(m => `${m.name.trim()}=${m.slot}`).join(' / '), fb = b.members.map(m => `${m.name.trim()}=${m.slot}`).join(' / ');
+  if (fa !== fb) ch.push(`ENTRY動画のメンバー: ${esc(fa || 'なし')} → <b>${esc(fb || 'なし')}</b>`);
+  return ch;
+}
+function renderEntry() {
+  const box = $('entryBox'); if (!box || !st.ev) return;
+  const e = st.ev, probs = entryProblems();
+  const slotOpts = m => `<option value="0" ${m.slot >= 1 ? '' : 'selected'}>選ぶ</option>` + Array.from({ length: EV_SLOTS }, (_, k) => k + 1).map(n => `<option value="${n}" ${m.slot === n ? 'selected' : ''}>枠 ${n}</option>`).join('');
+  box.innerHTML = (probs.length ? `<div class="banner err" style="margin-bottom:10px"><b>直してから保存してください</b><ul style="margin:4px 0 0 18px;padding:0">${probs.map(t => `<li>${esc(t)}</li>`).join('')}</ul></div>` : '')
+    + `<label class="f" style="margin-top:0">ENTRY で動画を</label>
+ <div class="rf">${[{ v: true, n: '流す' }, { v: false, n: '流さない（今までどおり）' }].map(r => `<div class="opt ${e.on === r.v ? 'sel' : ''}" onclick="evOn(${r.v})">${r.n}</div>`).join('')}</div>
+ <label class="f">メンバー（VRChat の表示名）と動画の枠</label>
+ ${e.members.length ? e.members.map((m, i) => `<div class="row" style="gap:8px;margin-bottom:6px;align-items:center"><input type="text" value="${esc(m.name)}" placeholder="表示名" oninput="evName(${i}, this.value)" onchange="renderEntry()" style="flex:1;min-width:0"><select onchange="evSlot(${i}, +this.value)" style="width:auto">${slotOpts(m)}</select><button class="danger" onclick="evDel(${i})">削除</button></div>`).join('') : '<p class="help">まだ登録がありません。</p>'}
+ <div class="acts"><button onclick="evAdd()">＋ メンバーを追加</button></div>
+ <div class="note">表示名は VRChat の表示名と一字一句同じにしてください（大文字・小文字・記号も区別します）。同じ枠を複数のメンバーに選べます。<br>保存した内容は、ワールドで設定を読み直すか、入り直したときから効きます。<br>動画が読み込めないときは、約 25 秒待ってから今までの ENTRY になります。動画の途中で ENTRY ボタンをもう一度押すと、動画を止めて ENTRY に進みます。</div>
+ <label class="f">動画の枠（この URL のファイルを差し替えると、流れる動画が変わります）</label>
+ <div class="help">${Array.from({ length: EV_SLOTS }, (_, k) => k + 1).map(n => `枠 ${n}: ${esc(evUrl(n))}`).join('<br>')}</div>`;
+  updateDirty();
+}
+function evOn(v) { st.ev.on = v; renderEntry(); }
+function evName(i, v) { st.ev.members[i].name = v; updateDirty(); }
+function evSlot(i, v) { st.ev.members[i].slot = v; renderEntry(); }
+function evAdd() { st.ev.members.push({ name: '', slot: 0 }); renderEntry(); }
+function evDel(i) { st.ev.members.splice(i, 1); renderEntry(); }
 
 /* ---------- 画面: 出演者の組 ---------- */
 const slotPre = sl => { const m = sl && sl.t === 'm' ? memOf(sl.id) : null; return !!m && m.ceiling < 0; };
@@ -1096,14 +1154,14 @@ async function doSave() {
 }
 /* ---------- JSON 表示・全体描画 ---------- */
 function json() { try { $('json').textContent = configText(); } catch (e) { $('json').textContent = String(e); } }
-const tabs = ['sets', 'memory', 'posters', 'ander', 'settings'];
+const tabs = ['sets', 'memory', 'entry', 'posters', 'ander', 'settings'];
 function show(t) {
   if (!tabs.includes(t)) t = 'sets';
   document.querySelectorAll('.tab').forEach(e => e.classList.toggle('on', e.id === 'tab-' + t));
   document.querySelectorAll('#nav button').forEach(b => b.classList.toggle('on', b.dataset.t === t));
   try { history.replaceState(null, '', location.search + '#' + t) } catch (e) { }; window.scrollTo(0, 0);
 }
-function renderAll() { renderSettings(); renderSets(); renderMem(); renderPosters(); json(); updateDirty(); }
+function renderAll() { renderSettings(); renderSets(); renderMem(); renderEntry(); renderPosters(); json(); updateDirty(); }
 async function reloadAll() {
   if (computeChanges().length && !confirm('未保存の変更は消えます。読み直しますか？')) return;
   if (await loadAll()) renderAll();
