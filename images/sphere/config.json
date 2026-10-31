@@ -139,15 +139,6 @@
       "audiolink": 1
     },
     {
-      "name": "ハロウィン",
-      "roof": -1,
-      "ceiling": 23,
-      "fx": 5,
-      "motion": 8,
-      "color": 15,
-      "audiolink": 1
-    },
-    {
       "name": "桜・前向き！",
       "roof": -1,
       "ceiling": 9,
@@ -290,6 +281,33 @@
       "motion": 8,
       "color": 15,
       "audiolink": 1
+    },
+    {
+      "name": "ハーモニー",
+      "roof": -1,
+      "ceiling": -1,
+      "fx": 2,
+      "motion": 8,
+      "color": 15,
+      "audiolink": 1
+    },
+    {
+      "name": "メロディー",
+      "roof": -1,
+      "ceiling": -1,
+      "fx": 5,
+      "motion": 8,
+      "color": 15,
+      "audiolink": 1
+    },
+    {
+      "name": "シンフォニー",
+      "roof": -1,
+      "ceiling": -1,
+      "fx": 2,
+      "motion": 0,
+      "color": 15,
+      "audiolink": 0
     }
   ],
   "sets": [
@@ -343,20 +361,35 @@
     {
       "name": "Melshala",
       "presets": [
-        -1,
-        -1,
+        10,
+        2,
         23,
-        -1
+        15
       ],
       "memories": [
-        "",
-        "",
-        "ハロウィン",
-        ""
+        "アリーナ・Melshala",
+        "プラネタリウム・Melshala",
+        "ハロウィン・Melshala",
+        "星空・Melshala"
       ]
     },
     {
       "name": "Astrolabe",
+      "presets": [
+        13,
+        5,
+        3,
+        -1
+      ],
+      "memories": [
+        "海辺・Astrolabe",
+        "人魚姫と月の雫・Astrolabe",
+        "アストロラーベ・Astrolabe",
+        ""
+      ]
+    },
+    {
+      "name": "オープニング",
       "presets": [
         -1,
         -1,
