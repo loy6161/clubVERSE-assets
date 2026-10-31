@@ -20,6 +20,7 @@
  <div class="grp"><span class="gname">Sphere</span><div class="gtabs">
   <button data-t="sets">出演者の組</button>
   <button data-t="memory">プリセットメモリー</button>
+  <button data-t="entry">ENTRY動画</button>
  </div></div>
  <div class="grp"><span class="gname">clubVERSE</span><div class="gtabs">
   <button data-t="posters">ポスター</button>
@@ -48,6 +49,12 @@
   <div class="col-l"><div class="card"><div id="memList"></div><button onclick="addMem()" id="addMemBtn" style="width:100%">＋ 新しいメモリー</button></div></div>
   <div class="col-r"><div class="card" id="memEd"></div></div>
  </div>
+</section>
+
+<section class="tab" id="tab-entry">
+ <h2>Sphere — ENTRY動画</h2>
+ <p class="lead">登録したメンバーが ENTRY ボタンを押すと、天井が動画に変わり、そのメンバーの枠の動画が流れます。流れ終わると、今までの ENTRY の流れになります。登録していない人が押したときと、「流さない」にしたときは、今までどおりの ENTRY です。</p>
+ <div class="card" id="entryBox"></div>
 </section>
 
 <section class="tab" id="tab-posters">
