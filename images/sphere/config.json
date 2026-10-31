@@ -308,6 +308,15 @@
       "motion": 0,
       "color": 15,
       "audiolink": 0
+    },
+    {
+      "name": "ハロウィン・Melshala（コピー）",
+      "roof": -1,
+      "ceiling": 23,
+      "fx": 5,
+      "motion": 8,
+      "color": 15,
+      "audiolink": 1
     }
   ],
   "sets": [
@@ -384,7 +393,7 @@
       "memories": [
         "アリーナ・Melshala",
         "プラネタリウム・Melshala",
-        "ハロウィン・Melshala",
+        "ハロウィン・Melshala（コピー）",
         "星空・Melshala"
       ]
     },
