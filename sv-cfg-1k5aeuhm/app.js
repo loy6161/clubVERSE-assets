@@ -349,7 +349,7 @@ function buildConfig() {
   if (!('posters' in out) && want.posters) out.posters = pOut;
   if (!('presets' in out) && want.presets) out.presets = presets;
   if (!('sets' in out) && want.sets) out.sets = sets;
-  if ('entryVideo' in base || st.ev.on || st.ev.members.length) out.entryVideo = entryOut();
+  if ('entryVideo' in base || st.ev.mode !== 'off' || st.ev.members.length || st.ev.opSlot) out.entryVideo = entryOut();
   return out;
 }
 function configText() {
@@ -460,23 +460,29 @@ function validate() {
   return { errors, warns };
 }
 
-/* ---------- ENTRY動画（2026-10-31）: config.json "entryVideo": { "on": true/false, "members": [ { "name": 表示名, "slot": 1-10 } ] } ---------- */
+/* ---------- ENTRY動画（2026-10-31）: config.json "entryVideo": { "mode": "op" | "unit" | "off", "opSlot": 1-10, "members": [ { "name": 表示名, "slot": 1-10 } ] }
+   op = ALL の ENTRY ボタンで、誰が押しても opSlot の動画 / unit = ほかの ENTRY ボタンで、登録メンバーが押したらその人の枠 / off = 流さない（最初の版の "on" は読むだけ） ---------- */
 const EV_SLOTS = 10;
+const EV_MODES = [{ v: 'op', n: 'OP用' }, { v: 'unit', n: 'ユニット用' }, { v: 'off', n: '流さない（今までどおり）' }];
 const evUrl = n => `https://allverse.jp/sphere/assets/media/entry/entry_${String(n).padStart(2, '0')}.mp4`;
+const evModeLabel = v => (EV_MODES.find(x => x.v === v) || { n: '?' }).n;
 function parseEntry(v) {
-  const e = { on: false, members: [], raw: isObj(v) ? v : null };
+  const e = { mode: 'off', opSlot: 0, members: [] };
   if (!isObj(v)) return e;
-  e.on = v.on === true;
+  e.mode = ['op', 'unit', 'off'].includes(v.mode) ? v.mode : (v.on === true ? 'unit' : 'off');
+  e.opSlot = Number.isInteger(v.opSlot) ? v.opSlot : 0;
   if (Array.isArray(v.members)) v.members.forEach(m => { if (isObj(m)) e.members.push({ name: typeof m.name === 'string' ? m.name : '', slot: Number.isInteger(m.slot) ? m.slot : 0 }); });
   return e;
 }
 function entryOut() {
   const base = isObj(st.baseCfg && st.baseCfg.entryVideo) ? st.baseCfg.entryVideo : {};
-  const o = Object.assign({}, base); o.on = st.ev.on; o.members = st.ev.members.map(m => ({ name: m.name.trim(), slot: m.slot }));
+  const o = Object.assign({}, base); delete o.on;
+  o.mode = st.ev.mode; o.opSlot = st.ev.opSlot; o.members = st.ev.members.map(m => ({ name: m.name.trim(), slot: m.slot }));
   return o;
 }
 function entryProblems() {
   const e = [];
+  if (st.ev.mode === 'op' && !(st.ev.opSlot >= 1 && st.ev.opSlot <= EV_SLOTS)) e.push('OP用の動画の枠が選ばれていません');
   st.ev.members.forEach((m, i) => {
     if (!m.name.trim()) e.push(`${i + 1} 人目の名前が空です`);
     if (!(m.slot >= 1 && m.slot <= EV_SLOTS)) e.push(`${i + 1} 人目${m.name.trim() ? '「' + m.name.trim() + '」' : ''}の枠が選ばれていません`);
@@ -487,28 +493,38 @@ function entryProblems() {
 function entryChanges() {
   const a = st.baseEv, b = st.ev, ch = [];
   if (!a) return ch;
-  if (a.on !== b.on) ch.push(`ENTRY動画: ${a.on ? '流す' : '流さない'} → <b>${b.on ? '流す' : '流さない'}</b>`);
+  if (a.mode !== b.mode) ch.push(`ENTRY動画: ${evModeLabel(a.mode)} → <b>${evModeLabel(b.mode)}</b>`);
+  if (a.opSlot !== b.opSlot) ch.push(`ENTRY動画の OP用の枠: ${a.opSlot >= 1 ? '枠 ' + a.opSlot : 'なし'} → <b>${b.opSlot >= 1 ? '枠 ' + b.opSlot : 'なし'}</b>`);
   const fa = a.members.map(m => `${m.name.trim()}=${m.slot}`).join(' / '), fb = b.members.map(m => `${m.name.trim()}=${m.slot}`).join(' / ');
   if (fa !== fb) ch.push(`ENTRY動画のメンバー: ${esc(fa || 'なし')} → <b>${esc(fb || 'なし')}</b>`);
   return ch;
 }
 function renderEntry() {
   const box = $('entryBox'); if (!box || !st.ev) return;
-  const e = st.ev, probs = entryProblems();
-  const slotOpts = m => `<option value="0" ${m.slot >= 1 ? '' : 'selected'}>選ぶ</option>` + Array.from({ length: EV_SLOTS }, (_, k) => k + 1).map(n => `<option value="${n}" ${m.slot === n ? 'selected' : ''}>枠 ${n}</option>`).join('');
-  box.innerHTML = (probs.length ? `<div class="banner err" style="margin-bottom:10px"><b>直してから保存してください</b><ul style="margin:4px 0 0 18px;padding:0">${probs.map(t => `<li>${esc(t)}</li>`).join('')}</ul></div>` : '')
-    + `<label class="f" style="margin-top:0">ENTRY で動画を</label>
- <div class="rf">${[{ v: true, n: '流す' }, { v: false, n: '流さない（今までどおり）' }].map(r => `<div class="opt ${e.on === r.v ? 'sel' : ''}" onclick="evOn(${r.v})">${r.n}</div>`).join('')}</div>
- <label class="f">メンバー（VRChat の表示名）と動画の枠</label>
- ${e.members.length ? e.members.map((m, i) => `<div class="row" style="gap:8px;margin-bottom:6px;align-items:center"><input type="text" value="${esc(m.name)}" placeholder="表示名" oninput="evName(${i}, this.value)" onchange="renderEntry()" style="flex:1;min-width:0"><select onchange="evSlot(${i}, +this.value)" style="width:auto">${slotOpts(m)}</select><button class="danger" onclick="evDel(${i})">削除</button></div>`).join('') : '<p class="help">まだ登録がありません。</p>'}
+  const e = st.ev;
+  const slotOpts = cur => `<option value="0" ${cur >= 1 ? '' : 'selected'}>選ぶ</option>` + Array.from({ length: EV_SLOTS }, (_, k) => k + 1).map(n => `<option value="${n}" ${cur === n ? 'selected' : ''}>枠 ${n}</option>`).join('');
+  box.innerHTML = `<div id="entryProbs"></div><label class="f" style="margin-top:0">ENTRY で流す動画</label>
+ <div class="rf">${EV_MODES.map(r => `<div class="opt ${e.mode === r.v ? 'sel' : ''}" onclick="evMode('${r.v}')">${r.n}</div>`).join('')}</div>
+ <div class="note">OP用: ALL の ENTRY ボタンで、誰が押しても下の「OP用の動画」が流れます。ほかの ENTRY ボタンは今までどおりです。<br>ユニット用: ALL 以外の ENTRY ボタンで、登録したメンバーが押すと、そのメンバーの枠の動画が流れます。ALL のボタンは今までどおりです。</div>
+ <label class="f">OP用の動画</label>
+ <select onchange="evOpSlot(+this.value)" style="width:auto">${slotOpts(e.opSlot)}</select>
+ <label class="f">ユニット用: メンバー（VRChat の表示名）と動画の枠</label>
+ ${e.members.length ? e.members.map((m, i) => `<div class="row" style="gap:8px;margin-bottom:6px;align-items:center"><input type="text" value="${esc(m.name)}" placeholder="表示名" oninput="evName(${i}, this.value)" style="flex:1;min-width:0"><select onchange="evSlot(${i}, +this.value)" style="width:auto">${slotOpts(m.slot)}</select><button class="danger" onclick="evDel(${i})">削除</button></div>`).join('') : '<p class="help">まだ登録がありません。</p>'}
  <div class="acts"><button onclick="evAdd()">＋ メンバーを追加</button></div>
  <div class="note">表示名は VRChat の表示名と一字一句同じにしてください（大文字・小文字・記号も区別します）。同じ枠を複数のメンバーに選べます。<br>保存した内容は、ワールドで設定を読み直すか、入り直したときから効きます。<br>動画が読み込めないときは、約 25 秒待ってから今までの ENTRY になります。動画の途中で ENTRY ボタンをもう一度押すと、動画を止めて ENTRY に進みます。</div>
  <label class="f">動画の枠（この URL のファイルを差し替えると、流れる動画が変わります）</label>
  <div class="help">${Array.from({ length: EV_SLOTS }, (_, k) => k + 1).map(n => `枠 ${n}: ${esc(evUrl(n))}`).join('<br>')}</div>`;
+  entryProbsShow();
+}
+// the problems banner only (typing a name does not rebuild the inputs: the focus stays)
+function entryProbsShow() {
+  const el = $('entryProbs'); if (!el) return; const probs = entryProblems();
+  el.innerHTML = probs.length ? `<div class="banner err" style="margin-bottom:10px"><b>直してから保存してください</b><ul style="margin:4px 0 0 18px;padding:0">${probs.map(t => `<li>${esc(t)}</li>`).join('')}</ul></div>` : '';
   updateDirty();
 }
-function evOn(v) { st.ev.on = v; renderEntry(); }
-function evName(i, v) { st.ev.members[i].name = v; updateDirty(); }
+function evMode(v) { st.ev.mode = v; renderEntry(); }
+function evOpSlot(v) { st.ev.opSlot = v; renderEntry(); }
+function evName(i, v) { st.ev.members[i].name = v; entryProbsShow(); }
 function evSlot(i, v) { st.ev.members[i].slot = v; renderEntry(); }
 function evAdd() { st.ev.members.push({ name: '', slot: 0 }); renderEntry(); }
 function evDel(i) { st.ev.members.splice(i, 1); renderEntry(); }
