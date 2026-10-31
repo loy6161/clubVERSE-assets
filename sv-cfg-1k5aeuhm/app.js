@@ -53,7 +53,7 @@ const COLOR_LIGHT = new Set([0, 1, 2, 5, 6, 7, 8, 11]);   // 明るい色は黒�
 const MAX_MEM = 50, MAX_SETS = 24, SLOTS = 10;
 const emptySlots = () => Array(SLOTS).fill(null);
 // メモリーの 5 項目: [キー, 最大値, 表示名]（最大値はワールド SphereVersePresetMemory.cs と同じ）
-const MEMF = [['roof', 3, '屋根'], ['ceiling', 23, '天井'], ['fx', 5, 'ポストエフェクト'], ['motion', 13, '照明の動き'], ['color', 15, '照明の色']];
+const MEMF = [['roof', 3, '屋根'], ['ceiling', 23, '天井'], ['fx', 5, 'ポストエフェクト'], ['motion', 13, '照明の動き'], ['color', 15, '照明の色'], ['audiolink', 1, '照明の AudioLink']];   // 2026-10-31 audiolink: 0 off / 1 on (loyさん「WEB設定でAudioLinkのON/OFFもメモリー出来るようにして」)
 
 /* ---------- ポスターのケース（大きさは今の実ファイルの実測。枚ごとの実寸は data.js の FILESZ） ---------- */
 const rng = (a, b) => Array.from({ length: b - a + 1 }, (_, i) => a + i);
@@ -231,8 +231,8 @@ function readMemField(v, max, key) {
 }
 function parseMem(p) {
   const id = st.nextId++;
-  if (!isObj(p)) return { id, name: '', roof: -1, ceiling: -1, fx: -1, motion: -1, color: -1, bad: {}, rawEntry: p, raw: null, n0: null };
-  const m = { id, name: typeof p.name === 'string' ? p.name : '', name0: typeof p.name === 'string' ? p.name : '', roof: -1, ceiling: -1, fx: -1, motion: -1, color: -1, bad: {}, raw: clone(p), n0: {} };
+  if (!isObj(p)) return { id, name: '', roof: -1, ceiling: -1, fx: -1, motion: -1, color: -1, audiolink: -1, bad: {}, rawEntry: p, raw: null, n0: null };
+  const m = { id, name: typeof p.name === 'string' ? p.name : '', name0: typeof p.name === 'string' ? p.name : '', roof: -1, ceiling: -1, fx: -1, motion: -1, color: -1, audiolink: -1, bad: {}, raw: clone(p), n0: {} };
   if ('name' in p && p.name !== null && typeof p.name !== 'string') m.bad.name = p.name;
   MEMF.forEach(([k, max]) => { const r = readMemField(p[k], max, k); m[k] = r.v; m.n0[k] = r.v; if (r.bad) m.bad[k] = p[k]; });
   return m;
@@ -361,7 +361,8 @@ const ceilLabel = v => v < 0 ? '変えない' : (CEIL_NAMES[v] != null ? CEIL_NA
 const fxLabel = v => v < 0 ? '変えない' : (FX.find(f => f.v === v) || { n: '?' }).n;
 const motLabel = v => v < 0 ? '変えない' : (MOTION[v] || '?');
 const colorLabel = v => v < 0 ? '変えない' : ((COLORS.find(c => c.v === v) || COLOR_SPECIAL.find(c => c.v === v) || { n: '?' }).n);
-const LAB = { roof: roofLabel, ceiling: ceilLabel, fx: fxLabel, motion: motLabel, color: colorLabel };
+const alLabel = v => v < 0 ? '変えない' : (v === 1 ? 'オン' : 'オフ');
+const LAB = { roof: roofLabel, ceiling: ceilLabel, fx: fxLabel, motion: motLabel, color: colorLabel, audiolink: alLabel };
 const memFieldLabel = (m, k) => m.bad && m.bad[k] !== undefined ? '不正な値 ' + jstr(m.bad[k]) : LAB[k](m[k]);
 function slotLabelOf(sl, memsSrc) {
   if (sl == null) return '空き';
@@ -376,7 +377,7 @@ function computeChanges() {
   const bm = new Map(st.baseMems.map(m => [m.id, m]));
   st.mems.forEach((m, i) => {
     const b = bm.get(m.id);
-    if (!b) { ch.push({ t: 'mem', cls: 'add', h: `メモリー追加: <b>${esc(m.name)}</b>（屋根 ${roofLabel(m.roof)} / 天井 ${ceilLabel(m.ceiling)} / ポストエフェクト ${fxLabel(m.fx)} / 照明の動き ${motLabel(m.motion)} / 照明の色 ${colorLabel(m.color)}）` }); return; }
+    if (!b) { ch.push({ t: 'mem', cls: 'add', h: `メモリー追加: <b>${esc(m.name)}</b>（屋根 ${roofLabel(m.roof)} / 天井 ${ceilLabel(m.ceiling)} / ポストエフェクト ${fxLabel(m.fx)} / 照明の動き ${motLabel(m.motion)} / 照明の色 ${colorLabel(m.color)} / 照明の AudioLink ${alLabel(m.audiolink)}）` }); return; }
     if ('rawEntry' in m) return;
     const d = [];
     if (b.name !== m.name) d.push(`名前 ${esc(b.name)} → ${esc(m.name)}`);
@@ -421,7 +422,7 @@ function memProblems(m) {
   if (m.bad.name !== undefined) e.push(`名前 ${jstr(m.bad.name)} が文字列ではありません。入れ直してください`);
   else if (!m.name.trim()) e.push('名前が空です');
   MEMF.forEach(([k, max, nm]) => { if (m.bad[k] !== undefined) e.push(`${nm}の値 ${jstr(m.bad[k])} が正しくありません（0〜${max}${k === 'ceiling' ? ' のうち使える番号' : ''}、または「変えない」）。選び直してください`); });
-  if (!Object.keys(m.bad).length && m.roof < 0 && m.ceiling < 0 && m.fx < 0 && m.motion < 0 && m.color < 0) e.push('5 項目ぜんぶ「変えない」です。ワールドはこのメモリーを無視します（何か 1 つ選ぶか、削除してください）');
+  if (!Object.keys(m.bad).length && m.roof < 0 && m.ceiling < 0 && m.fx < 0 && m.motion < 0 && m.color < 0 && m.audiolink < 0) e.push('6 項目ぜんぶ「変えない」です。ワールドはこのメモリーを無視します（何か 1 つ選ぶか、削除してください）');
   if (m.roof > 0 && m.ceiling > 0) e.push('屋根を開くときは、天井をガラスか「変えない」にしてください（没入型の天井は屋根を閉じます）');
   return e;
 }
@@ -495,6 +496,7 @@ function memSummary(m) {
   if (m.fx >= 0) p.push(fxLabel(m.fx));
   if (m.motion >= 0) p.push(motLabel(m.motion));
   if (m.color >= 0) p.push('色 ' + colorLabel(m.color));
+  if (m.audiolink >= 0) p.push('AudioLink ' + alLabel(m.audiolink));
   Object.keys(m.bad || {}).forEach(k => p.push('不正な値(' + k + ')'));
   return p.length ? p.join(' ・ ') : '（何も変えない）';
 }
@@ -532,7 +534,9 @@ function renderMem() {
  <div style="flex:1;min-width:0"><label class="f">照明の動き</label><select onchange="setMotion(+this.value)">${none('motion')}<option value="-1" ${!bd('motion') && m.motion === -1 ? 'selected' : ''}>変えない</option>${MOTION.map((x, i) => `<option value="${i}" ${!bd('motion') && i === m.motion ? 'selected' : ''}>${i} ${x}</option>`).join('')}</select></div></div>
  <label class="f">照明の色</label>
  <div class="chips colors">${colorChips}</div>
- <div class="note">没入型の天井（ガラス以外）を選ぶと屋根は閉じます。屋根を開く場合は、天井はガラスか「変えない」になります。5 項目ぜんぶ「変えない」のメモリーは保存できません。「パレット」は、呼んだときにパレットで今拾っている色へ切り替えるだけで、色そのものは保存されません。</div>
+ <label class="f">照明の AudioLink</label>
+ <div class="rf">${[{ v: -1, n: '変えない' }, { v: 1, n: 'オン' }, { v: 0, n: 'オフ' }].map(r => `<div class="opt ${!bd('audiolink') && m.audiolink === r.v ? 'sel' : ''}" onclick="setAL(${r.v})">${r.n}</div>`).join('')}</div>
+ <div class="note">没入型の天井（ガラス以外）を選ぶと屋根は閉じます。屋根を開く場合は、天井はガラスか「変えない」になります。6 項目ぜんぶ「変えない」のメモリーは保存できません。「パレット」は、呼んだときにパレットで今拾っている色へ切り替えるだけで、色そのものは保存されません。</div>
  <p class="help">使われている出演者: ${esc(st.sets.filter(s => s.p.some(x => x && x.t === 'm' && x.id === m.id)).map(s => s.name).join('、')) || 'なし'}</p>
  <div class="acts"><button disabled title="ワールドの中で確かめてください">見え方を試す（未対応）</button><button onclick="dupMem()" ${st.mems.length >= MAX_MEM ? 'disabled' : ''}>複製</button><button class="danger" onclick="delMem()">削除</button></div>`;
 }
@@ -549,8 +553,9 @@ function setCeil(n) {
 }
 function setFx(v) { const m = memOf(selMem); if (v === -2) return; m.fx = v; if (m.bad.fx !== undefined && m.n0) m.n0.fx = undefined; delete m.bad.fx; renderMem(); }
 function setColor(v) { const m = memOf(selMem); m.color = v; if (m.bad.color !== undefined && m.n0) m.n0.color = undefined; delete m.bad.color; renderMem(); }
+function setAL(v) { const m = memOf(selMem); m.audiolink = v; if (m.bad.audiolink !== undefined && m.n0) m.n0.audiolink = undefined; delete m.bad.audiolink; renderMem(); }
 function setMotion(v) { const m = memOf(selMem); if (v === -2) return; m.motion = v; if (m.bad.motion !== undefined && m.n0) m.n0.motion = undefined; delete m.bad.motion; renderMem(); }
-function newMem(o) { return Object.assign({ id: st.nextId++, name: '', roof: -1, ceiling: -1, fx: -1, motion: -1, color: -1, bad: {}, raw: null, n0: null }, o); }
+function newMem(o) { return Object.assign({ id: st.nextId++, name: '', roof: -1, ceiling: -1, fx: -1, motion: -1, color: -1, audiolink: -1, bad: {}, raw: null, n0: null }, o); }
 function addMem() {
   if (st.mems.length >= MAX_MEM) return;
   let k = st.mems.length + 1, name; do { name = '新しいメモリー' + (k > 1 ? ' ' + k : ''); k++; } while (memByName(name));
@@ -559,7 +564,7 @@ function addMem() {
 function dupMem() {
   if (st.mems.length >= MAX_MEM) return;
   const m = memOf(selMem); if ('rawEntry' in m) return; let name = m.name + '（コピー）', k = 2; while (memByName(name)) name = m.name + '（コピー' + (k++) + '）';
-  const c = newMem({ name, roof: m.roof, ceiling: m.ceiling, fx: m.fx, motion: m.motion, color: m.color, bad: clone(m.bad) }); st.mems.push(c); selMem = c.id; renderMem();
+  const c = newMem({ name, roof: m.roof, ceiling: m.ceiling, fx: m.fx, motion: m.motion, color: m.color, audiolink: m.audiolink, bad: clone(m.bad) }); st.mems.push(c); selMem = c.id; renderMem();
 }
 function delMem() {
   const m = memOf(selMem); if (!m) return;
