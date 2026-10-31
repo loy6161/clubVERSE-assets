@@ -236,6 +236,60 @@
       "motion": 8,
       "color": 15,
       "audiolink": 1
+    },
+    {
+      "name": "ハロウィン・Melshala",
+      "roof": -1,
+      "ceiling": 23,
+      "fx": 5,
+      "motion": 8,
+      "color": 15,
+      "audiolink": 1
+    },
+    {
+      "name": "星空・Melshala",
+      "roof": -1,
+      "ceiling": 15,
+      "fx": 5,
+      "motion": 8,
+      "color": 15,
+      "audiolink": 1
+    },
+    {
+      "name": "海辺・Astrolabe",
+      "roof": -1,
+      "ceiling": 13,
+      "fx": 2,
+      "motion": 8,
+      "color": 15,
+      "audiolink": 1
+    },
+    {
+      "name": "ワンワールド・Astrolabe",
+      "roof": -1,
+      "ceiling": 16,
+      "fx": 5,
+      "motion": 0,
+      "color": 15,
+      "audiolink": 0
+    },
+    {
+      "name": "人魚姫と月の雫・Astrolabe",
+      "roof": -1,
+      "ceiling": 5,
+      "fx": 2,
+      "motion": 0,
+      "color": 15,
+      "audiolink": 0
+    },
+    {
+      "name": "アストロラーベ・Astrolabe",
+      "roof": -1,
+      "ceiling": 3,
+      "fx": 5,
+      "motion": 8,
+      "color": 15,
+      "audiolink": 1
     }
   ],
   "sets": [
