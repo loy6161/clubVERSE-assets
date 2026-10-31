@@ -392,15 +392,15 @@
       "name": "Astrolabe",
       "presets": [
         13,
+        16,
         5,
-        3,
-        -1
+        3
       ],
       "memories": [
         "海辺・Astrolabe",
+        "ワンワールド・Astrolabe",
         "人魚姫と月の雫・Astrolabe",
-        "アストロラーベ・Astrolabe",
-        ""
+        "アストロラーベ・Astrolabe"
       ]
     },
     {
