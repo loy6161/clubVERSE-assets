@@ -165,7 +165,7 @@
       "roof": -1,
       "ceiling": 10,
       "fx": 5,
-      "motion": 1,
+      "motion": 8,
       "color": 15,
       "audiolink": 1
     },
@@ -173,15 +173,43 @@
       "name": "プラネタリウム・前向き！",
       "roof": -1,
       "ceiling": 2,
-      "fx": 2,
-      "motion": 0,
-      "color": 15
+      "fx": 5,
+      "motion": 8,
+      "color": 15,
+      "audiolink": 1
     },
     {
       "name": "ハロウィン",
       "roof": -1,
       "ceiling": 23,
       "fx": 5,
+      "motion": 8,
+      "color": -1,
+      "audiolink": 1
+    },
+    {
+      "name": "桜・前向き！",
+      "roof": -1,
+      "ceiling": 9,
+      "fx": 2,
+      "motion": 0,
+      "color": -1,
+      "audiolink": 0
+    },
+    {
+      "name": "九龍城・前向き！",
+      "roof": -1,
+      "ceiling": 17,
+      "fx": 5,
+      "motion": 8,
+      "color": -1,
+      "audiolink": 1
+    },
+    {
+      "name": "天空・前向き！",
+      "roof": -1,
+      "ceiling": 1,
+      "fx": 2,
       "motion": 8,
       "color": -1,
       "audiolink": 1
@@ -207,15 +235,15 @@
       "name": "前向き！やればできる団！",
       "presets": [
         2,
-        -1,
-        -1,
+        9,
+        17,
         1
       ],
       "memories": [
         "プラネタリウム・前向き！",
-        "",
-        "",
-        "天空"
+        "桜・前向き！",
+        "九龍城・前向き！",
+        "天空・前向き！"
       ]
     },
     {
