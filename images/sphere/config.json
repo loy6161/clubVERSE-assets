@@ -94,46 +94,6 @@
   },
   "presets": [
     {
-      "name": "雪の街",
-      "roof": -1,
-      "ceiling": 22,
-      "fx": -1,
-      "motion": -1,
-      "color": -1
-    },
-    {
-      "name": "天空",
-      "roof": -1,
-      "ceiling": 1,
-      "fx": 2,
-      "motion": -1,
-      "color": -1
-    },
-    {
-      "name": "海底",
-      "roof": -1,
-      "ceiling": 20,
-      "fx": -1,
-      "motion": -1,
-      "color": -1
-    },
-    {
-      "name": "砂浜",
-      "roof": -1,
-      "ceiling": 18,
-      "fx": -1,
-      "motion": -1,
-      "color": -1
-    },
-    {
-      "name": "スタジアム",
-      "roof": -1,
-      "ceiling": 21,
-      "fx": -1,
-      "motion": -1,
-      "color": -1
-    },
-    {
       "name": "オーロラ-きゃりりー",
       "roof": -1,
       "ceiling": 7,
@@ -254,6 +214,24 @@
       "name": "スタジアム・Schu*Shia",
       "roof": -1,
       "ceiling": 21,
+      "fx": 5,
+      "motion": 8,
+      "color": 15,
+      "audiolink": 1
+    },
+    {
+      "name": "アリーナ・Melshala",
+      "roof": -1,
+      "ceiling": 10,
+      "fx": 5,
+      "motion": 8,
+      "color": 15,
+      "audiolink": 1
+    },
+    {
+      "name": "プラネタリウム・Melshala",
+      "roof": -1,
+      "ceiling": 2,
       "fx": 5,
       "motion": 8,
       "color": 15,
