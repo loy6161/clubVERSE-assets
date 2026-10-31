@@ -418,5 +418,55 @@
         ""
       ]
     }
-  ]
+  ],
+  "entryVideo": {
+    "mode": "op",
+    "opSlot": 10,
+    "members": [
+      {
+        "name": "Lily Kanon",
+        "slot": 1
+      },
+      {
+        "name": "CALICO／きゃりこ",
+        "slot": 1
+      },
+      {
+        "name": "夕月ティア",
+        "slot": 2
+      },
+      {
+        "name": "o-maru",
+        "slot": 2
+      },
+      {
+        "name": "MagischerSchnee",
+        "slot": 3
+      },
+      {
+        "name": "Lucia Kurosaki",
+        "slot": 3
+      },
+      {
+        "name": "メルシュ-Malstrøm-",
+        "slot": 4
+      },
+      {
+        "name": "Sha-la Utayomi",
+        "slot": 4
+      },
+      {
+        "name": "UmitsukiShell",
+        "slot": 5
+      },
+      {
+        "name": "夢音結マイKranes Mai",
+        "slot": 5
+      },
+      {
+        "name": "loy｜VSinger",
+        "slot": 5
+      }
+    ]
+  }
 }
