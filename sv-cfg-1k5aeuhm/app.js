@@ -42,7 +42,7 @@ const FX = [
   { v: 3, n: 'カメラ用（やや暗い）', s: 'Switch_3 CAMERA用' },
   { v: 4, n: '暗め・Bloom 強い', s: 'Switch_5' },
   { v: 5, n: 'ライブ用（暖色）', s: 'Switch_4_forLIVE' }];
-const MOTION = ['ゆっくり楕円', '速い楕円', '左右スイープ', 'ステージ集中（旧）', '客席に散らす（旧）', '真上', '真下', 'ピンスポット', '高速楕円', '客席ウェーブ', 'サーチライト', '円周チェイス', 'ジャンプ切り替え', '上下バウンス'];   // 2026-10-28: 8-13 added; 3 / 4 are off the world's panel (old memories still work)
+const MOTION = ['ゆっくり楕円', '速い楕円', '左右スイープ', 'ステージ集中（旧）', '客席に散らす（旧）', '真上', '真下', 'ピンスポット', '高速楕円', 'ステージウェーブ', 'サーチライト', '円周チェイス', 'ジャンプ切り替え', '上下バウンス', '真下ゆらぎ'];   // 2026-10-28: 8-13 added; 3 / 4 are off the world's panel (old memories still work). 2026-11-01: 9 is the wave on the stage now (ステージウェーブ), 14 真下ゆらぎ added
 const COLORS = [
   { v: 0, n: '暖白', c: '#FFE1B7' }, { v: 1, n: '白', c: '#FFFFFF' }, { v: 2, n: '青白', c: '#C5E5FF' }, { v: 3, n: '赤', c: '#FF3B30' },
   { v: 4, n: 'オレンジ', c: '#FF7A1A' }, { v: 5, n: '琥珀', c: '#FFB020' }, { v: 6, n: '黄緑', c: '#B4FF3C' }, { v: 7, n: '緑', c: '#3CFF6E' },
@@ -53,7 +53,7 @@ const COLOR_LIGHT = new Set([0, 1, 2, 5, 6, 7, 8, 11]);   // 明るい色は黒�
 const MAX_MEM = 50, MAX_SETS = 24, SLOTS = 10;
 const emptySlots = () => Array(SLOTS).fill(null);
 // メモリーの 5 項目: [キー, 最大値, 表示名]（最大値はワールド SphereVersePresetMemory.cs と同じ）
-const MEMF = [['roof', 3, '屋根'], ['ceiling', 23, '天井'], ['fx', 5, 'ポストエフェクト'], ['motion', 13, '照明の動き'], ['color', 15, '照明の色'], ['audiolink', 1, '照明の AudioLink']];   // 2026-10-31 audiolink: 0 off / 1 on (loyさん「WEB設定でAudioLinkのON/OFFもメモリー出来るようにして」)
+const MEMF = [['roof', 3, '屋根'], ['ceiling', 23, '天井'], ['fx', 5, 'ポストエフェクト'], ['motion', 14, '照明の動き'], ['color', 15, '照明の色'], ['audiolink', 1, '照明の AudioLink']];   // 2026-10-31 audiolink: 0 off / 1 on (loyさん「WEB設定でAudioLinkのON/OFFもメモリー出来るようにして」)
 
 /* ---------- ポスターのケース（大きさは今の実ファイルの実測。枚ごとの実寸は data.js の FILESZ） ---------- */
 const rng = (a, b) => Array.from({ length: b - a + 1 }, (_, i) => a + i);
