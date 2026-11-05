@@ -17,8 +17,19 @@ const jstr = v => { try { return JSON.stringify(v); } catch (e) { return String(
 
 /* ---------- 設定（ブラウザ内だけ。試験モードは URL の ?test=1 のときだけで、保存しない） ---------- */
 const S = { token: '', repo: 'loy6161/clubVERSE', branch: 'main', test: false, comp: {}, dith: {} };
+// リポジトリ名とブランチ名の形を確かめる（API の URL に入れるので、決まった形の物だけ通す）
+const REPO_RE = /^[A-Za-z0-9-]{1,39}\/[A-Za-z0-9._-]{1,100}$/;
+const okRepo = v => typeof v === 'string' && REPO_RE.test(v) && !/\/\.\.?$/.test(v);
+const okBranch = v => typeof v === 'string' && v.length >= 1 && v.length <= 200 && /^[A-Za-z0-9._\/-]+$/.test(v)
+  && !v.split('/').some(x => x === '' || x === '.' || x === '..' || x.startsWith('.') || x.endsWith('.lock')) && !v.includes('..');
+const okToken = v => typeof v === 'string' && v.length <= 400 && /^[A-Za-z0-9_]*$/.test(v);
 function loadSettings() {
   try { const o = JSON.parse(localStorage.getItem(LS_KEY) || '{}'); ['token', 'repo', 'branch', 'comp', 'dith'].forEach(k => { if (o[k] !== undefined && o[k] !== null) S[k] = o[k]; }); } catch (e) { }
+  if (!okRepo(S.repo)) S.repo = 'loy6161/clubVERSE';
+  if (!okBranch(S.branch)) S.branch = 'main';
+  if (!okToken(S.token)) S.token = '';
+  if (!isObj(S.comp)) S.comp = {};
+  if (!isObj(S.dith)) S.dith = {};
   try { S.test = new URLSearchParams(location.search).get('test') === '1'; } catch (e) { }
 }
 function persistSettings() {
@@ -158,6 +169,9 @@ function ghJa(status, raw) {
 }
 async function gh(method, path, body) {
   let r;
+  if (!okRepo(S.repo) || !okBranch(S.branch) || typeof path !== 'string' || !path.startsWith('/repos/' + S.repo + '/') && path !== '/repos/' + S.repo || /(^|\/)\.\.?(\/|\?|$)/.test(path.split('?')[0])) {
+    const er = new Error('bad request path'); er.ja = 'リポジトリ名かブランチ名の形が正しくないので、送りませんでした。「設定（キー）」で確かめてください。'; er.raw = 'blocked'; throw er;
+  }
   try {
     r = await fetch(apiBase() + path, {
       method,
@@ -380,7 +394,7 @@ function computeChanges() {
   const bm = new Map(st.baseMems.map(m => [m.id, m]));
   st.mems.forEach((m, i) => {
     const b = bm.get(m.id);
-    if (!b) { ch.push({ t: 'mem', cls: 'add', h: `メモリー追加: <b>${esc(m.name)}</b>（屋根 ${roofLabel(m.roof)} / 天井 ${ceilLabel(m.ceiling)} / ポストエフェクト ${fxLabel(m.fx)} / 照明の動き ${motLabel(m.motion)} / 照明の色 ${colorLabel(m.color)} / 照明の AudioLink ${alLabel(m.audiolink)}）` }); return; }
+    if (!b) { ch.push({ t: 'mem', cls: 'add', h: `メモリー追加: <b>${esc(m.name)}</b>（屋根 ${esc(roofLabel(m.roof))} / 天井 ${esc(ceilLabel(m.ceiling))} / ポストエフェクト ${esc(fxLabel(m.fx))} / 照明の動き ${esc(motLabel(m.motion))} / 照明の色 ${esc(colorLabel(m.color))} / 照明の AudioLink ${esc(alLabel(m.audiolink))}）` }); return; }
     if ('rawEntry' in m) return;
     const d = [];
     if (b.name !== m.name) d.push(`名前 ${esc(b.name)} → ${esc(m.name)}`);
@@ -403,7 +417,7 @@ function computeChanges() {
   }
   entryChanges().forEach(h => ch.push({ t: 'entry', h }));
   const bp = st.baseCfg && st.baseCfg.posters;
-  if (isObj(bp) && 'info_wide' in bp && !!st.posters.info_wide1_3 !== !!st.basePosters.info_wide1_3) ch.push({ t: 'poster', h: `旧キー <b>info_wide</b>（古いワールド用）: ${bp.info_wide} → <b>${!!st.posters.info_wide1_3}</b>（INFO WIDE 1-3 に合わせます）` });
+  if (isObj(bp) && 'info_wide' in bp && !!st.posters.info_wide1_3 !== !!st.basePosters.info_wide1_3) ch.push({ t: 'poster', h: `旧キー <b>info_wide</b>（古いワールド用）: ${esc(jstr(bp.info_wide))} → <b>${!!st.posters.info_wide1_3}</b>（INFO WIDE 1-3 に合わせます）` });
   pendGroups().forEach(g => { const v = g.d, path = g.paths[0];
     if (v.unchanged) { ch.push({ t: 'imgsame', cls: 'noop', h: `<b>${g.paths.length > 1 ? '同じ画像 × ' + g.paths.length + ' 枠（' + esc(groupNames(g.paths)) + '）' : esc(path)}</b>: 今のファイルと同じ画像なので、保存しません` }); return; }
     if (g.paths.length > 1) ch.push({ t: 'img', h: `画像を差し替え: <b>同じ画像 × ${g.paths.length} 枠（${esc(groupNames(g.paths))}）</b>（${fmtB(v.bytes.length)}）<br><small>${esc(g.paths.join(' ／ '))}<br>方式: ${esc(v.methodLabel)} ・ はみ出し: ${esc(v.fitText)}</small>` });
@@ -1060,7 +1074,11 @@ function renderSettings() {
   renderConv();
 }
 function saveSettingsUi() {
-  S.token = $('setToken').value.trim(); S.repo = $('setRepo').value.trim() || 'loy6161/clubVERSE'; S.branch = $('setBranch').value.trim() || 'main'; persistSettings(); renderSettings(); toast(S.test ? '試験モードなので、設定は保存していません' : '設定を保存しました（このブラウザの中だけ）');
+  const tk = $('setToken').value.trim(), rp = $('setRepo').value.trim() || 'loy6161/clubVERSE', br = $('setBranch').value.trim() || 'main';
+  if (!okToken(tk)) { toast('キーの形が正しくありません（英数字と _ だけです）。保存していません'); return; }
+  if (!okRepo(rp)) { toast('保存先のリポジトリは「持ち主/名前」の形で入れてください。保存していません'); return; }
+  if (!okBranch(br)) { toast('ブランチ名に使えない文字や形があります。保存していません'); return; }
+  S.token = tk; S.repo = rp; S.branch = br; persistSettings(); renderSettings(); toast(S.test ? '試験モードなので、設定は保存していません' : '設定を保存しました（このブラウザの中だけ）');
   // 読み取り専用で開いていたら、キーを入れた時点で GitHub から読み直す
   if (!S.test && S.token && st.readOnly) reloadAll();
 }
