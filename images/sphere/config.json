@@ -11,7 +11,9 @@
     "info_wide1_3": false,
     "info_wide4_6": false,
     "info_wide7_9": false,
-    "info_wide": false
+    "info_wide": false,
+    "ent3_tall": true,
+    "ent4_tall": true
   },
   "sky": {
     "1": [
