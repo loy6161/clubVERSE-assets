@@ -2,7 +2,7 @@
   "version": 1,
   "posters": {
     "info1_5": true,
-    "info6_10": false,
+    "info6_10": true,
     "weekly": true,
     "today": true,
     "members": true,
