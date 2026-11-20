@@ -1,12 +1,12 @@
 {
   "version": 1,
   "posters": {
-    "info1_5": false,
-    "info6_10": false,
-    "weekly": false,
+    "info1_5": true,
+    "info6_10": true,
+    "weekly": true,
     "today": true,
-    "members": false,
-    "cd": false,
+    "members": true,
+    "cd": true,
     "info11_15": false,
     "info_wide1_3": false,
     "info_wide4_6": false,
