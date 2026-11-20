@@ -212,3 +212,9 @@ nav .grp:last-child .gname{border-bottom-color:transparent}
 .tile.sel{outline:3px solid var(--acc);outline-offset:1px}
 @media (max-width:1100px){.tiles{grid-template-columns:repeat(5,1fr)}}
 @media (max-width:640px){.tiles{grid-template-columns:repeat(3,1fr)}}
+/* 2026-11-20: entrance frames (縦 / 横 / 非表示) */
+.seg3{display:flex;gap:4px;margin:6px 0 2px}
+.seg3 button{flex:1;padding:5px 0;border:1px solid var(--line);border-radius:6px;background:#fff;font-size:12px;cursor:pointer;white-space:nowrap}
+.seg3 button.on.t,.seg3 button.on.w{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:700}
+.seg3 button.on.o{background:#5b6573;border-color:#5b6573;color:#fff;font-weight:700}
+.seg3.tabs{max-width:320px;margin:0 0 10px}

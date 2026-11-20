@@ -70,16 +70,32 @@ const MEMF = [['roof', 3, '屋根'], ['ceiling', 23, '天井'], ['fx', 5, 'ポ�
 const rng = (a, b) => Array.from({ length: b - a + 1 }, (_, i) => a + i);
 const p2 = n => String(n).padStart(2, '0');
 const CASES = [
-  { k: 'info1_5', n: 'INFO 1-5', sz: '810×1080', w: 810, h: 1080, f: rng(1, 5).map(i => 'Info/INFO' + p2(i) + '.png') },
-  { k: 'info6_10', n: 'INFO 6-10', sz: '810×1080', w: 810, h: 1080, f: ['06', '07', '08', '09', '10'].map(i => 'Info/INFO' + i + '.png') },
+  { k: 'info1_5', n: '入口1 縦（INFO 1-5）', sz: '810×1080', w: 810, h: 1080, f: rng(1, 5).map(i => 'Info/INFO' + p2(i) + '.png') },
+  { k: 'info6_10', n: '入口2 縦（INFO 6-10）', sz: '810×1080', w: 810, h: 1080, f: ['06', '07', '08', '09', '10'].map(i => 'Info/INFO' + i + '.png') },
   { k: 'weekly', n: 'WEEKLY', sz: '810×1080（WEEK5 は 763×1080）', w: 810, h: 1080, f: rng(1, 5).map(i => 'thisMonth/WEEK' + i + '.png') },
   { k: 'today', n: 'TODAY', sz: '1440×1920', w: 1440, h: 1920, f: ['thisMonth/TODAY.png'] },
   { k: 'members', n: 'MEMBERS', sz: '810×1080 前後（枚ごとに 761〜811 の幅）', w: 810, h: 1080, f: rng(0, 19).map(i => 'Member/L' + p2(i) + '.png') },
   { k: 'cd', n: 'CD BOOTH', sz: '500×500（CD01 は 506×500）／ POST は 764×1080 前後', w: 500, h: 500, f: ['CD/CD01.png', 'CD/CD02.png', 'CD/CD03.png', 'CD/CD04.png', 'CD/CD08.png', ...rng(1, 4).map(i => 'CD/POST' + p2(i) + '.png')] },
-  { k: 'info11_15', n: 'INFO 11-15', sz: '810×1080', w: 810, h: 1080, f: rng(11, 15).map(i => 'Info/INFO' + i + '.png') },
-  { k: 'info_wide1_3', n: 'INFO WIDE 1-3', sz: '1080×608', w: 1080, h: 608, f: rng(1, 3).map(i => 'Info/INFO_WIDE' + p2(i) + '.png') },
-  { k: 'info_wide4_6', n: 'INFO WIDE 4-6', sz: '1080×608', w: 1080, h: 608, f: rng(4, 6).map(i => 'Info/INFO_WIDE' + p2(i) + '.png') },
-  { k: 'info_wide7_9', n: 'INFO WIDE 7-9', sz: '1080×608', w: 1080, h: 608, f: rng(7, 9).map(i => 'Info/INFO_WIDE' + p2(i) + '.png') }];
+  { k: 'info11_15', n: '入口6 縦（INFO 11-15）', sz: '810×1080', w: 810, h: 1080, f: rng(11, 15).map(i => 'Info/INFO' + i + '.png') },
+  { k: 'info_wide1_3', n: '入口3 横（INFO WIDE 1-3）', sz: '1080×608', w: 1080, h: 608, f: rng(1, 3).map(i => 'Info/INFO_WIDE' + p2(i) + '.png') },
+  { k: 'info_wide4_6', n: '入口4 横（INFO WIDE 4-6）', sz: '1080×608', w: 1080, h: 608, f: rng(4, 6).map(i => 'Info/INFO_WIDE' + p2(i) + '.png') },
+  { k: 'info_wide7_9', n: '入口5 横（INFO WIDE 7-9）', sz: '1080×608', w: 1080, h: 608, f: rng(7, 9).map(i => 'Info/INFO_WIDE' + p2(i) + '.png') },
+  // 2026-11-20: the other form of each entrance frame (the world's PosterManager cases 10-15; files are new)
+  { k: 'ent1_wide', n: '入口1 横', sz: '1080×608', w: 1080, h: 608, f: rng(1, 3).map(i => 'Info/ENT1_WIDE' + i + '.png') },
+  { k: 'ent2_wide', n: '入口2 横', sz: '1080×608', w: 1080, h: 608, f: rng(1, 3).map(i => 'Info/ENT2_WIDE' + i + '.png') },
+  { k: 'ent3_tall', n: '入口3 縦', sz: '810×1080', w: 810, h: 1080, f: rng(1, 5).map(i => 'Info/ENT3_TALL' + i + '.png') },
+  { k: 'ent4_tall', n: '入口4 縦', sz: '810×1080', w: 810, h: 1080, f: rng(1, 5).map(i => 'Info/ENT4_TALL' + i + '.png') },
+  { k: 'ent5_tall', n: '入口5 縦', sz: '810×1080', w: 810, h: 1080, f: rng(1, 5).map(i => 'Info/ENT5_TALL' + i + '.png') },
+  { k: 'ent6_wide', n: '入口6 横', sz: '1080×608', w: 1080, h: 608, f: rng(1, 3).map(i => 'Info/ENT6_WIDE' + i + '.png') }];
+// 2026-11-20: the entrance frames (numbered from the right as on the wall). Each shows its tall case, its wide case or neither, never both;
+// the boards in the casino and outside follow the entrance (the world shares the pictures).
+const FRAMES = [
+  { n: '入口1', pos: '右上', t: 'info1_5', w: 'ent1_wide' }, { n: '入口2', pos: '右下', t: 'info6_10', w: 'ent2_wide' },
+  { n: '入口3', pos: '中上', t: 'ent3_tall', w: 'info_wide1_3' }, { n: '入口4', pos: '中下', t: 'ent4_tall', w: 'info_wide4_6' },
+  { n: '入口5', pos: '左上', t: 'ent5_tall', w: 'info_wide7_9' }, { n: '入口6', pos: '左下', t: 'info11_15', w: 'ent6_wide' }];
+const frameOf = k => FRAMES.find(f => f.t === k || f.w === k);
+const frameMode = f => st.posters[f.t] ? 't' : st.posters[f.w] ? 'w' : 'o';
+function setFrame(i, m) { const f = FRAMES[i]; st.posters[f.t] = m === 't'; st.posters[f.w] = m === 'w'; selCaseF(m === 'w' ? f.w : f.t); }
 const POSTER_KEYS = CASES.map(c => c.k);
 // 差し替え先の大きさ: 今の実ファイルの寸法（FILESZ）。無い物（新しい枠）はケースの基準
 function sizeOfFile(c, f) { const z = (typeof FILESZ !== 'undefined') && FILESZ[f]; return z ? [z[0], z[1]] : [c.w, c.h]; }
@@ -279,6 +295,7 @@ function initFromConfig(cfg, text) {
   const P = cfg.posters;
   if (P !== undefined && !Array.isArray(P) && !isObj(P)) st.topBad.push('posters が { } でも [ ] でもありません');
   POSTER_KEYS.forEach(k => st.posters[k] = Array.isArray(P) ? P.includes(k) : (isObj(P) && P[k] === true));
+  FRAMES.forEach(f => { if (st.posters[f.t] && st.posters[f.w]) st.posters[f.w] = false; });
   st.basePosters = Object.assign({}, st.posters);
   st.skyUrls = {};
   if (isObj(cfg.sky)) Object.keys(cfg.sky).forEach(k => { if (Array.isArray(cfg.sky[k]) && cfg.sky[k].length) st.skyUrls[+k] = cfg.sky[k]; });
@@ -717,13 +734,21 @@ function renderMap(c) {
  <p class="map-note">見取り図は Sphere VERSE のシーンを真上から撮った物（床から輪切り）。位置は実際の座標です。名前の付け方は仮。</p>`
 }
 function renderPosters() {
-  $('cases').innerHTML = CASES.map(c => `<div class="case ${c.k === selCase ? 'sel' : ''}" onclick="selCaseF('${c.k}')">
+  const frameCards = FRAMES.map((f, i) => { const m = frameMode(f), sel = selCase === f.t || selCase === f.w, show = caseOf(m === 'w' ? f.w : f.t);
+    return `<div class="case frame ${sel ? 'sel' : ''}" onclick="selCaseF('${m === 'w' ? f.w : f.t}')">
+  <div class="im" style='background-image:url("${assetUrl('images/' + show.f[0])}")${m === 'o' ? ';opacity:.35' : ''}'></div>
+  <div class="nm"><b>${f.n} <small style="display:inline">${f.pos}</small></b></div>
+  <div class="seg3">${[['t', '縦'], ['w', '横'], ['o', '非表示']].map(([k, t]) => `<button class="${m === k ? 'on ' + k : ''}" onclick="event.stopPropagation();setFrame(${i},'${k}');renderPosters()">${t}</button>`).join('')}</div>
+  <small>${m === 't' ? '縦 5 枚を表示' : m === 'w' ? '横 3 枚を表示' : '表示しない'}</small></div>`; }).join('');
+  $('cases').innerHTML = frameCards + CASES.filter(c => !frameOf(c.k)).map(c => `<div class="case ${c.k === selCase ? 'sel' : ''}" onclick="selCaseF('${c.k}')">
   <div class="im" style='background-image:url("${assetUrl('images/' + c.f[0])}")'></div>
   <div class="nm"><b>${c.n}</b><div class="sw ${st.posters[c.k] ? 'on' : ''}" onclick="event.stopPropagation();st.posters['${c.k}']=!st.posters['${c.k}'];renderPosters()"></div></div>
   <small>${c.f.length} 枚 ・ ${areasOf(c.k).length} エリア</small><small>${st.posters[c.k] ? '最初から読む' : '最初は読まない'}</small></div>`).join('');
   const c = caseOf(selCase);
   renderMap(c);
-  $('caseBox').innerHTML = `<b>${c.n}</b> <span class="help">の画像（${c.f.length} 枚・今のファイルの大きさ ${c.sz}）。絵を押すと、その絵が出る場所が見取り図に出ます</span>
+  const fr = frameOf(c.k);
+  $('caseBox').innerHTML = (fr ? `<div class="seg3 tabs">${[[fr.t, '縦の 5 枚'], [fr.w, '横の 3 枚']].map(([k, t]) => `<button class="${c.k === k ? 'on t' : ''}" onclick="selCaseF('${k}')">${t}</button>`).join('')}</div>` : '') +
+ `<b>${c.n}</b> <span class="help">の画像（${c.f.length} 枚・今のファイルの大きさ ${c.sz}）。絵を押すと、その絵が出る場所が見取り図に出ます</span>
  <div class="pgrid" style="margin-top:10px">${c.f.map((f, i) => {
     const pd = st.pending.get('images/' + f);
     return `<div class="pimg ${selImg === i ? 'sel' : ''} ${pd ? 'pend' : ''}" onclick="selImgF(${i})"><div class="im" style='background-image:url("${pd ? pd.url : assetUrl('images/' + f)}")'></div><div class="ft"><span>${i + 1}枚目${pd ? ' <i class="pendtag">差し替え予定</i>' : ''}</span><span>${f.split('/').pop()}</span></div></div>`
